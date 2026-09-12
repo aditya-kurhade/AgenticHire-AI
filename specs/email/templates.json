@@ -1,0 +1,10 @@
+{
+  "interview": {
+    "subject": "Invitation to Interview - AgenticHire",
+    "body": "Hi {{candidate_name}},\n\nWe are pleased to invite you for an interview for the {{job_title}} position.\n\nBest regards,\nRecruitment Team"
+  },
+  "rejection": {
+    "subject": "Application Status - AgenticHire",
+    "body": "Hi {{candidate_name}},\n\nThank you for your interest in the {{job_title}} position. Unfortunately, we will not be moving forward at this time.\n\nBest regards,\nRecruitment Team"
+  }
+}

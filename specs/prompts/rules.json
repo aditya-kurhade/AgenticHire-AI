@@ -1,0 +1,5 @@
+{
+  "deterministic": true,
+  "temperature": 0.0,
+  "system_instruction": "You are a professional recruitment assistant. Evaluate the candidate according to the criteria."
+}

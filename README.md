@@ -6,17 +6,11 @@ This document outlines the step-by-step roadmap for building the AgenticHire-AI 
 
 ## Project Roadmap & Step-by-Step Guide
 
-### Phase 1: Initial Repository & Directory Setup
-1. **Initialize Project Directories**
-   - Create the directory structure:
-     - `/client` (React application)
-     - `/server` (Express backend)
-     - `/specs` (Hiring, workflow, and retry JSON configurations)
-   - Initialize `/server` with `npm init -y` and install backend dependencies.
-   - Initialize `/client` using Vite/React (`npm create vite@latest client -- --template react`) or similar, and configure Tailwind CSS and shadcn/ui.
-2. **Setup Global Configuration & Environment Variables**
-   - Create root `.env` / `/server/.env` and `/client/.env.local` files.
+### Phase 1: Initial Setup
+1. **Initialize Project & Databases**
+   - Create the directory structure: `/client` (React application), `/server` (Express backend), `/specs`.
    - Set up Docker environment (MongoDB, Qdrant).
+   - Configure global and local environment variables (root `.env`, `/server/.env`, `/client/.env.local`).
 
 ---
 
@@ -52,7 +46,19 @@ This document outlines the step-by-step roadmap for building the AgenticHire-AI 
 
 ---
 
-### Phase 5: Multi-Agent System & LangGraph Workflow
+### Phase 5: Recruiter Auth & Dashboard Frontend
+1. **Routing & Auth Store Configuration**
+   - Configure client-side routing using `react-router-dom`.
+   - Build client authentication store managing tokens using `zustand`.
+2. **Authentication Pages**
+   - Implement recruiter login/signup forms with validation and backend api integration.
+   - Implement Route protection guards to restrict unauthorized access to dashboards.
+3. **Dashboard Shell**
+   - Implement recruiter dashboard shell layout containing side navigation navigation.
+
+---
+
+### Phase 6: Multi-Agent System & LangGraph Workflow
 1. **Build AI Agents (`/server/src/agents/`)**
    - **Resume Parser Agent**: Extracts experience/skills from PDF.
    - **Embedding Agent**: Embeds data and stores/retrieves context from Qdrant.
@@ -67,10 +73,10 @@ This document outlines the step-by-step roadmap for building the AgenticHire-AI 
 
 ---
 
-### Phase 6: Recruiter & Candidate Frontend (`/client`)
-1. **Recruiter Portal**
-   - Auth login/signup views.
-   - Main dashboard, job creation, and candidate list.
+### Phase 7: Recruiter & Candidate Frontend Features
+1. **Recruiter Features**
+   - Job creation and detailed specification manager.
+   - Candidate applicant listing, details view, and AI decision approval/rejection tools.
    - Workflow visualization panel rendering states dynamically using React Flow.
 2. **Candidate Portal**
    - Public apply routes `/jobs/:jobId/apply` bypassing authentication.
@@ -78,8 +84,44 @@ This document outlines the step-by-step roadmap for building the AgenticHire-AI 
 
 ---
 
-### Phase 7: Testing & Verification
+### Phase 8: Testing & Verification
 1. **Unit and Integration Testing**
    - Run tests using Jest/Supertest for API logic and agent outputs.
 2. **E2E Scenario Testing**
    - Run full flow from creating job to parsing resume and sending emails.
+
+
+Remaining important work:
+React Flow workflow visualization
+Spec requires React Flow, but reactflow / @xyflow/react is not installed or used.
+Current dashboard shows workflow/log UI, but not a real React Flow graph.
+
+LangGraph orchestration
+Workflow engine exists in server/src/workflows/hiringWorkflow.js.
+But it is custom JavaScript orchestration, not actual LangGraph.
+
+Real embeddings
+EmbeddingAgent uses deterministic hash vectors.
+Spec says BAAI/bge-small-en-v1.5; that is not actually integrated yet.
+
+Full RAG ingestion
+Qdrant search exists.
+But there is no proper document chunking/indexing pipeline for policies, evaluation docs, interview guidelines, etc.
+
+Real Resend package/client
+Email sends via raw fetch and falls back to mock.
+Good enough for dev, but not a complete Resend integration.
+
+Workflow logs to /server/logs
+Logs are persisted in MongoDB.
+Spec also says workflow logs must be stored inside /server/logs; that file logging is not implemented.
+
+Better recruiter dashboard pages
+Routes now exist, but dashboard is still one large tabbed component.
+Could be split into real page components for jobs, candidates, workflows, analytics.
+
+More tests
+Existing server tests pass.
+Still missing deeper tests for RAG retrieval, retry failures, agent outputs, and full E2E.
+
+So: core flow is there, but the biggest remaining coding features are React Flow visualization, real LangGraph, real embedding/RAG ingestion, and file-based workflow failure logs.

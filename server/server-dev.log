@@ -1,0 +1,5 @@
+
+> server@1.0.0 dev
+> node src/index.js
+
+◇ injected env (7) from .env // tip: ⌘ suppress logs { quiet: true }
