@@ -43,7 +43,9 @@ class EmbeddingAgent {
    */
   static async storeChunk(collectionName, pointId, text, payload = {}) {
     try {
+      console.log(`🔢 [EmbeddingAgent] Generating 384-dimensional dense vector for text (${text.length} chars)...`);
       const vector = await this.generateEmbedding(text);
+      console.log(`☁️ [EmbeddingAgent] Upserting point ${pointId} into Qdrant collection '${collectionName}'...`);
       await qdrantClient.upsert(collectionName, {
         wait: true,
         points: [
@@ -57,6 +59,7 @@ class EmbeddingAgent {
           }
         ]
       });
+      console.log(`✅ [EmbeddingAgent] Point ${pointId} successfully committed to Qdrant Cloud.`);
       return { success: true, pointId };
     } catch (error) {
       console.error(`EmbeddingAgent storeChunk error in collection ${collectionName}:`, error.message);
@@ -74,6 +77,7 @@ class EmbeddingAgent {
    */
   static async searchSimilarity(collectionName, queryText, topK = 5, minSimilarity = 0.75) {
     try {
+      console.log(`🔍 [EmbeddingAgent] Searching Qdrant '${collectionName}' collection with Top-K=${topK}, Min-Similarity=${minSimilarity}...`);
       const queryVector = await this.generateEmbedding(queryText);
       const results = await qdrantClient.search(collectionName, {
         vector: queryVector,
@@ -81,6 +85,7 @@ class EmbeddingAgent {
         with_payload: true,
         score_threshold: minSimilarity
       });
+      console.log(`📥 [EmbeddingAgent] Retrieved ${results.length} relevant context document(s) from Qdrant.`);
       return results;
     } catch (error) {
       console.error(`EmbeddingAgent searchSimilarity error in collection ${collectionName}:`, error.message);

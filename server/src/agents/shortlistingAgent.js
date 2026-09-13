@@ -24,19 +24,23 @@ class ShortlistingAgent {
       throw new Error('Invalid shortlisting threshold spec: shortlist and hold must be numbers.');
     }
 
+    console.log(`📜 [ShortlistingAgent] Loaded Spec Thresholds -> Shortlist: >= ${shortlistMin}%, Hold: >= ${holdMin}%, Reject: < ${holdMin}%`);
+
     let status = 'reject';
     let reasoning = '';
 
     if (matchScore >= shortlistMin) {
       status = 'shortlist';
-      reasoning = `Score of ${matchScore} meets or exceeds the shortlisting threshold of ${shortlistMin}.`;
+      reasoning = `Score of ${matchScore}% meets or exceeds the shortlisting threshold of ${shortlistMin}%.`;
     } else if (matchScore >= holdMin) {
       status = 'hold';
-      reasoning = `Score of ${matchScore} meets the review threshold of ${holdMin} but is below the shortlisting threshold of ${shortlistMin}.`;
+      reasoning = `Score of ${matchScore}% meets the review threshold of ${holdMin}% but is below the shortlisting threshold of ${shortlistMin}%.`;
     } else {
       status = 'reject';
-      reasoning = `Score of ${matchScore} is below the minimum review threshold of ${holdMin}.`;
+      reasoning = `Score of ${matchScore}% is below the minimum review threshold of ${holdMin}%.`;
     }
+
+    console.log(`⚖️ [ShortlistingAgent] Evaluated Candidate: ${reasoning} -> Result: [${status.toUpperCase()}]`);
 
     return {
       success: true,

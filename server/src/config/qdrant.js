@@ -1,7 +1,12 @@
 const { QdrantClient } = require('@qdrant/js-client-rest');
 
 const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333';
-const qdrantClient = new QdrantClient({ url: qdrantUrl, checkCompatibility: false });
+const qdrantApiKey = process.env.QDRANT_API_KEY || undefined;
+const qdrantClient = new QdrantClient({ 
+  url: qdrantUrl, 
+  apiKey: qdrantApiKey,
+  checkCompatibility: false 
+});
 
 const initQdrantCollections = async () => {
   try {

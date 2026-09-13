@@ -26,8 +26,12 @@ class MatchingAgent {
     // 2. Perform RAG context retrieval from policies collection
     // (e.g. searching for specific hiring policy terms related to the job title)
     const searchQuery = `${jobSpec.title} hiring guidelines requirements`;
+    console.log(`📚 [MatchingAgent] Fetching RAG organizational policies for "${searchQuery}"...`);
     const retrievedDocs = await EmbeddingAgent.searchSimilarity('policies', searchQuery, topK, minSimilarity);
     const ragContext = retrievedDocs.map(doc => doc.payload?.text || '').join('\n');
+    if (ragContext) {
+      console.log(`📖 [MatchingAgent] Injected ${retrievedDocs.length} policy guidelines into RAG context window.`);
+    }
 
     // 3. Match against the job's saved required and preferred skills
     const requiredSkills = jobSpec.required_skills || [];
@@ -36,6 +40,8 @@ class MatchingAgent {
     const thresholds = specLoader.loadShortlistingThresholds();
     const shortlistMin = thresholds.shortlist;
     const holdMin = thresholds.hold;
+
+    console.log(`🔍 [MatchingAgent] Comparing Candidate Skills [${candidateSkills.join(', ')}] with Required [${requiredSkills.join(', ')}] & Preferred [${preferredSkills.join(', ')}]...`);
 
     if (typeof shortlistMin !== 'number' || typeof holdMin !== 'number') {
       throw new Error('Invalid shortlisting threshold spec: shortlist and hold must be numbers.');
@@ -51,6 +57,8 @@ class MatchingAgent {
 
     const missingRequired = requiredSkills.filter(skill => !matchedRequired.includes(skill));
     const missingPreferred = preferredSkills.filter(skill => !matchedPreferred.includes(skill));
+
+    console.log(`📊 [MatchingAgent] Matched: [${matchedRequired.join(', ')}], Missing: [${missingRequired.join(', ')}]`);
 
     // Load prompt rules
     const promptRules = specLoader.loadPromptRules();
@@ -77,6 +85,7 @@ ${ragContext || "No additional guidelines found in vector database."}
 Evaluate the compatibility score and identify missing skills.`;
 
     try {
+      console.log(`🤖 [MatchingAgent] Running multi-attribute LLM scoring & missing skills analysis...`);
       const llmResponse = await callLLM(systemPrompt, userPrompt, true);
       const jsonStart = llmResponse.indexOf('{');
       const jsonEnd = llmResponse.lastIndexOf('}') + 1;
@@ -85,6 +94,7 @@ Evaluate the compatibility score and identify missing skills.`;
 
       // Verify and blend local deterministic matching with LLM result
       const score = evaluationResult.match_score || 0;
+      console.log(`🎯 [MatchingAgent] LLM determined Match Score: ${score}%, Recommendation: ${evaluationResult.recommendation}`);
       return {
         success: true,
         data: {

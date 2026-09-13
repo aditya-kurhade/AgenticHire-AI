@@ -33,8 +33,13 @@ Missing/Lacking Skills identified: ${JSON.stringify(missingSkills)}
 
 Generate tailored interview assessment.`;
 
+    console.log(`📝 [InterviewAgent] Building custom assessment prompt for candidate "${parsedResume.name}" applying for "${jobTitle}"...`);
+    console.log(`🎯 [InterviewAgent] Focusing questions on Candidate Skills [${candidateSkills.slice(0, 4).join(', ')}] & Identified Gaps [${missingSkills.join(', ') || 'None'}]...`);
+
     try {
+      console.log(`🤖 [InterviewAgent] Requesting LLM to synthesize technical questions, coding task & evaluation rubric...`);
       const content = await callLLM(systemPrompt, userPrompt, false);
+      console.log(`✅ [InterviewAgent] Successfully generated ${content.length} characters of assessment & interview rubric.`);
       return {
         success: true,
         data: {

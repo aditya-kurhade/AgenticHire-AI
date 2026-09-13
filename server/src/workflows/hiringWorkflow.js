@@ -106,11 +106,22 @@ class HiringWorkflowEngine {
           // Update candidate parsed data
           candidate.parsed_resume_json = result.data;
           await candidate.save();
+
+          console.log('\n======================================================');
+          console.log('📄 [Agent 1: Resume Parser] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`👤 Name       : ${result.data?.name || 'N/A'}`);
+          console.log(`📧 Email      : ${result.data?.email || 'N/A'}`);
+          console.log(`📞 Phone      : ${result.data?.phone || 'N/A'}`);
+          console.log(`💼 Experience : ${result.data?.experience || 0} years`);
+          console.log(`🛠️ Skills     : ${JSON.stringify(result.data?.skills || [])}`);
+          console.log(`🎓 Education  : ${result.data?.education || 'N/A'}`);
+          console.log('======================================================\n');
         }
 
         else if (node === 'embedding_agent') {
           const textToEmbed = JSON.stringify(candidate.parsed_resume_json || {});
-          await this.runWithRetry(
+          const result = await this.runWithRetry(
             'embedding_agent',
             async () => {
               const pointId = Math.floor(Math.random() * 1000000);
@@ -122,6 +133,15 @@ class HiringWorkflowEngine {
             { candidateId: candidate._id },
             workflow._id
           );
+
+          console.log('\n======================================================');
+          console.log('🧠 [Agent 2: Embedding Agent] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`📦 Collection : 'resumes' in Qdrant Vector Cloud`);
+          console.log(`🔢 Point ID   : ${result.pointId}`);
+          console.log(`📐 Embedding  : 384 dimensions (BAAI/bge-small-en-v1.5)`);
+          console.log(`💾 Stored For : Candidate ID ${candidate._id}`);
+          console.log('======================================================\n');
         }
 
         else if (node === 'matching_agent') {
@@ -136,6 +156,15 @@ class HiringWorkflowEngine {
           candidate.matched_skills = result.data.matched_required_skills;
           candidate.missing_skills = result.data.missing_skills;
           await candidate.save();
+
+          console.log('\n======================================================');
+          console.log('🎯 [Agent 3: Matching Agent] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`🎯 Match Score    : ${result.data.match_score}%`);
+          console.log(`✅ Matched Skills : ${JSON.stringify(result.data.matched_required_skills || [])}`);
+          console.log(`❌ Missing Skills : ${JSON.stringify(result.data.missing_skills || [])}`);
+          console.log(`💡 Recommendation : ${result.data.recommendation || 'N/A'}`);
+          console.log('======================================================\n');
         }
 
         else if (node === 'shortlisting_agent') {
@@ -148,11 +177,26 @@ class HiringWorkflowEngine {
 
           candidate.status = result.data.status;
           await candidate.save();
+
+          console.log('\n======================================================');
+          console.log('⚖️ [Agent 4: Shortlisting Agent] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`📊 Score Evaluated: ${candidate.match_score}%`);
+          console.log(`🏁 Final Decision : ${result.data.status.toUpperCase()}`);
+          console.log(`📋 Action Taken   : Candidate marked as '${result.data.status}'`);
+          console.log('======================================================\n');
         }
 
         else if (node === 'human_approval') {
           // PAUSE WORKFLOW: interrupt execution to wait for recruiter approval
-          console.log(`[Workflow ${workflow._id}] Paused at human_approval node.`);
+          console.log('\n======================================================');
+          console.log('⏸️ [HUMAN-IN-THE-LOOP CHECKPOINT] WORKFLOW PAUSED');
+          console.log('------------------------------------------------------');
+          console.log(`👤 Candidate : ${candidate.name || 'Candidate'}`);
+          console.log(`💼 Job Title : ${job.title}`);
+          console.log(`📈 Score     : ${candidate.match_score}%`);
+          console.log(`⏳ Action    : Waiting for recruiter manual decision on Dashboard...`);
+          console.log('======================================================\n');
           workflow.status = 'paused_approval';
           await workflow.save();
           return workflow;
@@ -173,6 +217,14 @@ class HiringWorkflowEngine {
           // Save interview assessment to candidate metadata or field
           candidate.interview_rubric = result.data.assessment;
           await candidate.save();
+
+          console.log('\n======================================================');
+          console.log('🎤 [Agent 5: Interview Agent] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`💼 Role Assessed: ${job.title}`);
+          console.log(`📝 Questions & Rubric Generated:`);
+          console.log(result.data.assessment ? result.data.assessment.substring(0, 300) + '...' : 'Generated');
+          console.log('======================================================\n');
         }
 
         else if (node === 'email_agent') {
@@ -182,23 +234,34 @@ class HiringWorkflowEngine {
           };
           const templateType = candidate.status === 'shortlist' ? 'interview' : 'rejection';
           
-          await this.runWithRetry(
+          const result = await this.runWithRetry(
             'email_agent',
             async () => {
               const formatted = EmailAgent.formatEmail(templateType, emailVars);
               await EmailAgent.send(candidate.email, formatted.data.subject, formatted.data.body);
-              return { success: true, templateType };
+              return { success: true, templateType, subject: formatted.data.subject };
             },
             { candidateEmail: candidate.email },
             workflow._id
           );
+
+          console.log('\n======================================================');
+          console.log('📧 [Agent 6: Email Agent] COMPLETED WORK');
+          console.log('------------------------------------------------------');
+          console.log(`📨 Recipient : ${candidate.email}`);
+          console.log(`📑 Template  : '${templateType}'`);
+          console.log(`📬 Subject   : ${result.subject || 'Status update'}`);
+          console.log(`🚀 Delivered : Successfully dispatched via Resend`);
+          console.log('======================================================\n');
         }
       }
 
       // Mark workflow as completed successfully
       workflow.status = 'success';
       await workflow.save();
-      console.log(`[Workflow ${workflow._id}] Completed successfully.`);
+      console.log('\n🎉 ======================================================');
+      console.log(`🎉 [Workflow ${workflow._id}] ENTIRE MULTI-AGENT PIPELINE FINISHED`);
+      console.log('🎉 ======================================================\n');
       return workflow;
     } catch (error) {
       console.error(`[Workflow ${workflow._id}] Execution failed:`, error.message);
@@ -221,7 +284,13 @@ class HiringWorkflowEngine {
     const candidate = await Candidate.findById(workflow.candidate_id);
     if (!candidate) throw new Error('Candidate not found.');
 
-    console.log(`[Workflow ${workflowId}] Resuming with decision: ${decision}`);
+    console.log('\n======================================================');
+    console.log(`✅ [HUMAN DECISION RECEIVED] RECRUITER ${decision.toUpperCase()}`);
+    console.log('------------------------------------------------------');
+    console.log(`👤 Candidate : ${candidate.name}`);
+    console.log(`⚖️ Decision  : ${decision.toUpperCase()}`);
+    console.log(`🚀 Next Step : ${decision === 'reject' ? 'Dispatching Rejection Email...' : 'Triggering Interview & Email Agents...'}`);
+    console.log('======================================================\n');
     
     // Log human approval action
     await WorkflowLog.create({

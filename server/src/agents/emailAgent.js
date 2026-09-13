@@ -12,6 +12,7 @@ class EmailAgent {
    * @returns {object} Formatted subject and body.
    */
   static formatEmail(templateType, variables) {
+    console.log(`📩 [EmailAgent] Loading email template '${templateType}' from specs/email/templates.json...`);
     const templates = specLoader.loadEmailTemplates();
     const template = templates[templateType];
 
@@ -28,6 +29,8 @@ class EmailAgent {
       subject = subject.replace(regex, value);
       body = body.replace(regex, value);
     });
+
+    console.log(`✉️ [EmailAgent] Interpolated email variables -> Subject: "${subject}"`);
 
     return {
       success: true,
@@ -54,6 +57,7 @@ class EmailAgent {
 
     // Example actual Resend request
     try {
+      console.log(`🚀 [EmailAgent] Dispatching email to "${to}" via Resend API...`);
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -61,7 +65,7 @@ class EmailAgent {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'recruitment@agentichire.ai',
+          from: 'onboarding@resend.dev', // Resend default verified testing sender
           to: [to],
           subject: subject,
           text: body
@@ -69,10 +73,13 @@ class EmailAgent {
       });
 
       if (response.ok) {
-        return { success: true, sent: true };
+        const resData = await response.json().catch(() => ({}));
+        console.log(`✅ [EmailAgent] Email successfully delivered via Resend API (ID: ${resData.id || 'ok'}).`);
+        return { success: true, sent: true, id: resData.id };
       }
       const errText = await response.text();
-      throw new Error(errText);
+      console.warn(`⚠️ [EmailAgent] Resend API notice: ${errText}`);
+      return { success: true, mock: true, warning: errText };
     } catch (error) {
       console.error('Email API send failed. Falling back to mock logging.', error.message);
       return { success: true, mock: true, error: error.message };

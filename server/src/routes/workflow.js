@@ -25,6 +25,49 @@ router.get('/settings', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/workflow/llm-settings
+// @desc    Get LLM configuration and Ollama connectivity
+// @access  Private (Recruiter only)
+router.get('/llm-settings', protect, async (req, res) => {
+  try {
+    const { getLLMConfig, checkOllamaHealth } = require('../utils/llmClient');
+    const config = getLLMConfig();
+    const health = await checkOllamaHealth();
+    return res.json({
+      success: true,
+      data: {
+        provider: config.provider,
+        ollamaModel: config.ollamaModel,
+        ollamaBaseUrl: config.ollamaBaseUrl,
+        ollamaStatus: health
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// @route   POST /api/workflow/llm-settings
+// @desc    Update LLM provider and local model
+// @access  Private (Recruiter only)
+router.post('/llm-settings', protect, async (req, res) => {
+  try {
+    const { setLLMConfig, checkOllamaHealth } = require('../utils/llmClient');
+    const { provider, ollamaModel, ollamaBaseUrl } = req.body;
+    const updated = setLLMConfig({ provider, ollamaModel, ollamaBaseUrl });
+    const health = await checkOllamaHealth();
+    return res.json({
+      success: true,
+      data: {
+        ...updated,
+        ollamaStatus: health
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // @route   GET /api/workflow/candidate/:candidateId
 // @desc    Get detailed state and logs by candidate ID
 // @access  Private (Recruiter only)

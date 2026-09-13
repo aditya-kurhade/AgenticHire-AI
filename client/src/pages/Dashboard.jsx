@@ -51,6 +51,15 @@ const Dashboard = () => {
   });
   const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
 
+  // LLM Provider & Ollama State
+  const [llmSettings, setLlmSettings] = useState({
+    provider: 'cloud',
+    ollamaModel: 'llama3:8b',
+    ollamaBaseUrl: 'http://localhost:11434',
+    ollamaStatus: { online: false, models: [] }
+  });
+  const [llmUpdating, setLlmUpdating] = useState(false);
+
   // Analytics States
   const [analyticsData, setAnalyticsData] = useState(null);
 
@@ -66,16 +75,17 @@ const Dashboard = () => {
     navigate(tabPaths[tab] || '/dashboard');
   };
 
-  // Fetch Jobs, Candidates, Settings & Analytics
+  // Fetch Jobs, Candidates, Settings, LLM status & Analytics
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [jobsRes, candidatesRes, settingsRes, analyticsRes] = await Promise.all([
+        const [jobsRes, candidatesRes, settingsRes, analyticsRes, llmRes] = await Promise.all([
           api.get('/jobs'),
           api.get('/candidates'),
           api.get('/workflow/settings').catch(() => ({ data: { data: {} } })),
-          api.get('/analytics').catch(() => ({ data: { data: null } }))
+          api.get('/analytics').catch(() => ({ data: { data: null } })),
+          api.get('/workflow/llm-settings').catch(() => api.get('/settings/llm')).catch(() => ({ data: { data: null } }))
         ]);
         setJobs(jobsRes.data.data);
         const fetchedCandidates = candidatesRes.data.data;
@@ -93,6 +103,10 @@ const Dashboard = () => {
         if (analyticsRes.data?.success) {
           setAnalyticsData(analyticsRes.data.data);
         }
+
+        if (llmRes.data?.success && llmRes.data.data) {
+          setLlmSettings(llmRes.data.data);
+        }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
       } finally {
@@ -101,6 +115,35 @@ const Dashboard = () => {
     };
     fetchData();
   }, [refreshTrigger, selectedCandidateId]);
+
+  const handleToggleLLMProvider = async (newProvider, newModel) => {
+    try {
+      setLlmUpdating(true);
+      const targetProvider = newProvider !== undefined ? newProvider : (llmSettings.provider === 'cloud' ? 'ollama' : 'cloud');
+      const targetModel = newModel || llmSettings.ollamaModel;
+
+      let res;
+      try {
+        res = await api.post('/workflow/llm-settings', {
+          provider: targetProvider,
+          ollamaModel: targetModel
+        });
+      } catch {
+        res = await api.post('/settings/llm', {
+          provider: targetProvider,
+          ollamaModel: targetModel
+        });
+      }
+
+      if (res.data?.success) {
+        setLlmSettings(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to update LLM provider:', err);
+    } finally {
+      setLlmUpdating(false);
+    }
+  };
 
   // Fetch Active Workflow & Logs when selectedCandidateId changes
   useEffect(() => {
@@ -339,6 +382,55 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-md">
+            {/* LLM Mode Switcher */}
+            <div className="flex items-center bg-surface-container-low border border-outline-variant p-1 rounded-xl gap-1 text-xs">
+              <button
+                onClick={() => handleToggleLLMProvider('cloud')}
+                disabled={llmUpdating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  llmSettings.provider === 'cloud'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                }`}
+                title="Groq (Cloud) with OpenRouter fallback"
+              >
+                <span className="material-symbols-outlined text-[16px]">cloud</span>
+                <span>Cloud (Groq)</span>
+              </button>
+
+              <button
+                onClick={() => handleToggleLLMProvider('ollama')}
+                disabled={llmUpdating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  llmSettings.provider === 'ollama'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                }`}
+                title={llmSettings.ollamaStatus?.online ? `Local Ollama (${llmSettings.ollamaModel}) Connected` : 'Local Ollama (Offline / Not Running)'}
+              >
+                <span className="material-symbols-outlined text-[16px]">terminal</span>
+                <span>Local Ollama</span>
+                <span
+                  className={`w-2 h-2 rounded-full inline-block ${
+                    llmSettings.ollamaStatus?.online ? 'bg-emerald-300 animate-pulse' : 'bg-red-400'
+                  }`}
+                  title={llmSettings.ollamaStatus?.online ? 'Ollama Online' : 'Ollama Offline'}
+                />
+              </button>
+
+              {llmSettings.provider === 'ollama' && llmSettings.ollamaStatus?.models?.length > 0 && (
+                <select
+                  value={llmSettings.ollamaModel}
+                  onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
+                  className="bg-surface-container border-0 rounded-lg text-body-xs font-semibold px-2 py-1 text-on-surface outline-none cursor-pointer"
+                >
+                  {llmSettings.ollamaStatus.models.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             <button className="relative p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full">
               <span className="material-symbols-outlined">notifications</span>
               <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
@@ -1040,7 +1132,9 @@ const Dashboard = () => {
                         <div className="space-y-sm">
                           <div className="flex justify-between items-center py-2 border-b border-outline-variant">
                             <span className="text-body-sm text-on-surface-variant">Default LLM Provider</span>
-                            <span className="text-label-sm font-bold bg-surface-container px-2 rounded">Groq (Fallback: OpenRouter)</span>
+                            <span className="text-label-sm font-bold bg-surface-container px-2 rounded">
+                              {llmSettings.provider === 'ollama' ? `Local Ollama (${llmSettings.ollamaModel})` : 'Groq (Fallback: OpenRouter)'}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center py-2 border-b border-outline-variant">
                             <span className="text-body-sm text-on-surface-variant">Persistence Layer</span>
@@ -1351,6 +1445,80 @@ const Dashboard = () => {
                   <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-lg">
                     Customize recruitment thresholds and integration parameters.
                   </p>
+
+                  <div className="p-lg bg-surface-container-lowest border border-outline-variant rounded-[24px] shadow-sm text-left max-w-2xl">
+                    <h3 className="font-headline-sm text-headline-sm text-on-surface mb-md">LLM & Local Model Engine</h3>
+                    <div className="space-y-md">
+                      <div>
+                        <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Active Engine Provider</label>
+                        <div className="flex gap-sm">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLLMProvider('cloud')}
+                            className={`flex-1 py-sm px-md rounded-xl font-bold border transition-all text-body-sm flex items-center justify-center gap-xs ${
+                              llmSettings.provider === 'cloud'
+                                ? 'bg-primary text-white border-primary shadow-sm'
+                                : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">cloud</span>
+                            Cloud (Groq & OpenRouter)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLLMProvider('ollama')}
+                            className={`flex-1 py-sm px-md rounded-xl font-bold border transition-all text-body-sm flex items-center justify-center gap-xs ${
+                              llmSettings.provider === 'ollama'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">terminal</span>
+                            Local Ollama
+                          </button>
+                        </div>
+                      </div>
+
+                      {llmSettings.provider === 'ollama' && (
+                        <div className="p-sm bg-surface-container-low border border-outline-variant rounded-xl space-y-sm">
+                          <div className="flex justify-between items-center">
+                            <span className="text-body-sm font-bold text-on-surface">Ollama Status</span>
+                            <span className={`text-label-sm px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                              llmSettings.ollamaStatus?.online
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              <span className={`w-2 h-2 rounded-full ${llmSettings.ollamaStatus?.online ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                              {llmSettings.ollamaStatus?.online ? 'Online & Ready' : 'Disconnected / Server Unreachable'}
+                            </span>
+                          </div>
+
+                          <div>
+                            <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Installed Local Model</label>
+                            {llmSettings.ollamaStatus?.models?.length > 0 ? (
+                              <select
+                                value={llmSettings.ollamaModel}
+                                onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
+                                className="w-full px-sm py-2 bg-white border border-outline-variant rounded-lg text-body-sm font-semibold outline-none"
+                              >
+                                {llmSettings.ollamaStatus.models.map(m => (
+                                  <option key={m} value={m}>{m}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={llmSettings.ollamaModel}
+                                onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
+                                placeholder="llama3:8b"
+                                className="w-full px-sm py-2 bg-white border border-outline-variant rounded-lg text-body-sm font-semibold outline-none"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="p-lg bg-surface-container-lowest border border-outline-variant rounded-[24px] shadow-sm text-left max-w-2xl">
                     <h3 className="font-headline-sm text-headline-sm text-on-surface mb-md">Integration Credentials</h3>
