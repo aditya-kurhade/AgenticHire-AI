@@ -2,9 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { 
   Bot, 
-  Search, 
   Award, 
-  PlayCircle, 
   UploadCloud, 
   FileSearch, 
   GitBranch, 
@@ -24,33 +22,35 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col antialiased">
       {/* Top Navigation Bar */}
-      <header className="flex justify-between items-center px-6 md:px-12 w-full sticky top-0 z-50 bg-[#f8f9ff]/80 backdrop-blur-md shadow-sm h-16 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <Bot className="text-[#944a00] w-6 h-6" />
+      <header className="flex justify-between items-center px-6 md:px-12 w-full sticky top-0 z-50 bg-[#FFFDF8]/85 backdrop-blur-md h-16 border-b border-[#e8ded5]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white shadow-sm">
+            <Bot className="w-4.5 h-4.5" />
+          </div>
           <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
         </div>
         
-        <nav className="hidden md:flex items-center space-x-10">
+        <nav className="hidden md:flex items-center space-x-8">
           <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#features">Features</a>
           <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#workflow">Workflows</a>
           <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#agents">AI Agents</a>
           <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#pricing">Pricing</a>
         </nav>
 
-        <div className="flex items-center gap-6">
-          <div className="hidden sm:flex relative items-center">
-            <Search className="w-4 h-4 absolute left-3 text-[#897365]" />
-            <input 
-              className="pl-10 pr-4 py-1.5 bg-[#eff4ff] border border-[#dcc1b1] rounded-lg text-sm focus:ring-2 focus:ring-[#ffb783] outline-none transition-all w-48 text-[#121c2a]" 
-              placeholder="Search roles..." 
-              type="text" 
-            />
-          </div>
+        <div className="flex items-center gap-3">
+          {!user && (
+            <button 
+              onClick={() => navigate('/login')}
+              className="hidden sm:inline text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors px-2"
+            >
+              Sign In
+            </button>
+          )}
           <button 
-            onClick={() => navigate(user ? '/dashboard' : '/login')}
-            className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-90 text-white px-6 py-2 rounded-lg font-semibold text-sm shadow-md active:scale-95 transition-all"
+            onClick={() => navigate(user ? '/dashboard' : '/signup')}
+            className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-90 text-white px-5 py-2 rounded-xl font-semibold text-sm shadow-sm active:scale-[0.98] transition-all"
           >
-            Sign In
+            {user ? 'Dashboard' : 'Get Started'}
           </button>
         </div>
       </header>
@@ -73,13 +73,15 @@ const Home = () => {
               <div className="flex flex-wrap gap-4 pt-2 justify-center">
                 <button 
                   onClick={() => navigate('/signup')}
-                  className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-95 text-white px-10 py-4 rounded-xl font-semibold text-base shadow-lg active:scale-95 transition-all"
+                  className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-95 text-white px-10 py-4 rounded-xl font-semibold text-base shadow-lg active:scale-[0.98] transition-all"
                 >
                   Get Started Free
                 </button>
-                <button className="bg-white border border-[#dcc1b1] text-[#121c2a] hover:bg-gray-50 px-10 py-4 rounded-xl font-semibold text-base shadow-sm hover:shadow-md active:scale-95 transition-all flex items-center gap-2">
-                  <PlayCircle className="w-5 h-5 text-gray-600" />
-                  Watch Demo
+                <button
+                  onClick={() => navigate('/login')}
+                  className="bg-white border border-[#dcc1b1] text-[#121c2a] hover:bg-[#F8F5EF] px-10 py-4 rounded-xl font-semibold text-base shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                >
+                  Sign In
                 </button>
               </div>
             </div>

@@ -38,8 +38,8 @@ const JobDetails = () => {
         <div className="max-w-md bg-white p-8 rounded-2xl border border-red-100 shadow-sm space-y-4">
           <p className="text-red-600 font-bold">Error Loading Job</p>
           <p className="text-sm text-gray-600">{error || 'Job not found.'}</p>
-          <button 
-            onClick={() => navigate('/')} 
+          <button
+            onClick={() => navigate('/')}
             className="px-5 py-2.5 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white rounded-lg text-sm font-bold shadow-md hover:opacity-95"
           >
             Go Back Home
@@ -52,29 +52,30 @@ const JobDetails = () => {
   return (
     <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col justify-between">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 md:px-12 bg-white border-b border-[#ebdccb]/60 shadow-sm h-16">
-        <div className="flex items-center gap-2">
+      <header className="flex justify-between items-center px-6 md:px-12 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] h-16 sticky top-0 z-40">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white text-xs font-bold shadow-sm">AH</div>
           <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
-        </div>
-        <button 
-          onClick={() => navigate('/')}
+        </Link>
+        <Link
+          to="/"
           className="text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors"
         >
-          View All Roles
-        </button>
+          Back to home
+        </Link>
       </header>
 
       {/* Main Panel */}
       <main className="flex-grow max-w-4xl mx-auto w-full px-6 py-12">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" /> Back to open opportunities
         </Link>
 
         <div className="bg-white rounded-3xl border border-[#dcc1b1] p-8 md:p-12 shadow-sm space-y-8 text-left">
-          
+
           {/* Header Info */}
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#121c2a] mb-3 leading-tight">
@@ -106,8 +107,8 @@ const JobDetails = () => {
               <div className="flex flex-wrap gap-2">
                 {job.required_skills && job.required_skills.length > 0 ? (
                   job.required_skills.map((skill, idx) => (
-                    <span 
-                      key={idx} 
+                    <span
+                      key={idx}
                       className="bg-[#ffbb8c]/10 text-[#944a00] px-3.5 py-1 rounded-full text-xs font-bold border border-[#ffbb8c]/30"
                     >
                       {skill}
@@ -124,8 +125,8 @@ const JobDetails = () => {
               <div className="flex flex-wrap gap-2">
                 {job.preferred_skills && job.preferred_skills.length > 0 ? (
                   job.preferred_skills.map((skill, idx) => (
-                    <span 
-                      key={idx} 
+                    <span
+                      key={idx}
                       className="bg-[#d9e3f6]/40 text-[#121c2a] px-3.5 py-1 rounded-full text-xs font-bold border border-[#d9e3f6]"
                     >
                       {skill}
@@ -146,7 +147,7 @@ const JobDetails = () => {
               <p className="text-xs text-[#564337] font-bold uppercase tracking-wider mb-1">Apply today</p>
               <p className="text-[11px] text-gray-500">Takes less than 2 minutes to submit your PDF resume.</p>
             </div>
-            <button 
+            <button
               onClick={() => navigate(`/jobs/${job._id}/apply`)}
               className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white font-bold text-sm rounded-xl shadow-md hover:opacity-95 active:scale-95 transition-all"
             >

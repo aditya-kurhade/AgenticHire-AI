@@ -19,6 +19,11 @@ const CandidateSchema = new mongoose.Schema({
   resume_url: {
     type: String
   },
+  job_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
+    index: true
+  },
   parsed_resume_json: {
     type: mongoose.Schema.Types.Mixed,
     default: null

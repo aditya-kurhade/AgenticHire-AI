@@ -1,6 +1,15 @@
+const fs = require('fs');
 const path = require('path');
-// Load environment variables relative to this file
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+// Load environment variables from server/.env or project root .env
+const serverEnvPath = path.join(__dirname, '../.env');
+const rootEnvPath = path.join(__dirname, '../../.env');
+if (fs.existsSync(serverEnvPath)) {
+  require('dotenv').config({ path: serverEnvPath });
+} else if (fs.existsSync(rootEnvPath)) {
+  require('dotenv').config({ path: rootEnvPath });
+} else {
+  require('dotenv').config();
+}
 
 const app = require('./app');
 const connectDB = require('./config/db');

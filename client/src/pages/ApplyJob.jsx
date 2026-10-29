@@ -113,10 +113,11 @@ const ApplyJob = () => {
   return (
     <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col justify-between">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 md:px-12 bg-white border-b border-[#ebdccb]/60 shadow-sm h-16">
-        <div className="flex items-center gap-2">
+      <header className="flex justify-between items-center px-6 md:px-12 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] h-16 sticky top-0 z-40">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white text-xs font-bold shadow-sm">AH</div>
           <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
-        </div>
+        </Link>
         <Link 
           to={`/jobs/${jobId}`} 
           className="text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors"

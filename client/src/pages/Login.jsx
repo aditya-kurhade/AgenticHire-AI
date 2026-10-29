@@ -39,7 +39,10 @@ const Login = () => {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#ffdcc5] opacity-10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
           
           <div className="z-10">
-            <h1 className="text-3xl font-extrabold text-[#944a00] mb-2">AgentHire AI</h1>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 primary-gradient rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm">AH</div>
+              <h1 className="text-3xl font-extrabold text-[#944a00]">AgentHire AI</h1>
+            </div>
             <p className="text-lg text-[#564337] font-medium max-w-sm">The human-centric recruitment OS built for modern talent discovery.</p>
           </div>
 
@@ -108,7 +111,6 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="block text-sm font-semibold text-[#121c2a]" htmlFor="password">Password</label>
-                  <Link className="text-sm font-semibold text-[#944a00] hover:underline" to="#">Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#897365] w-5 h-5" />
@@ -145,7 +147,7 @@ const Login = () => {
 
               {/* Submit Button */}
               <button 
-                className="w-full bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-95 text-white font-semibold text-sm py-3.5 rounded-lg shadow-sm hover:shadow-md hover:brightness-105 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2" 
+                className="w-full bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-95 text-white font-semibold text-sm py-3.5 rounded-xl shadow-sm hover:shadow-md hover:brightness-105 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2" 
                 type="submit"
                 disabled={loading}
               >
@@ -161,29 +163,6 @@ const Login = () => {
                   </>
                 )}
               </button>
-
-              {/* Divider */}
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-[#dcc1b1]"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-4 text-[#897365] font-semibold">Or continue with</span>
-                </div>
-              </div>
-
-              {/* Google Sign In */}
-              <button 
-                className="w-full bg-white border border-[#dcc1b1] text-[#121c2a] font-semibold text-sm py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm" 
-                type="button"
-              >
-                <img 
-                  alt="Google" 
-                  className="w-5 h-5" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9-QkTJ84SMnIcUk2KFU6KPv_L-Bvfww-g-PqXf6JgbCOxAjWQzKLCbO-a8SR_ee1MHVHTmqR8mKbGaxz47mc1UT6j88SyffIxQwhT-cYktOVTwofEoW3MXdqN-1YnqombN7HlNjQroQt9ndHiHIzSD81qqKZWmCoiPpMk3KQO1OKYcDnyRTzVlws_eOzzl2B6lmWgcWj1quM1BzFgnOdgFDkNoyEnBhV3cWSu_BbldQ4yviKLcDPVqUnFMlx8MiwXVaBr0g2liJs"
-                />
-                Sign in with Google
-              </button>
             </form>
 
             <p className="mt-8 text-center text-sm text-[#564337]">
@@ -196,12 +175,7 @@ const Login = () => {
 
       {/* Simple Footer for Legal */}
       <footer className="absolute bottom-4 md:bottom-2 left-1/2 -translate-x-1/2 w-full px-6 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 opacity-60">
-        <span className="text-xs font-semibold text-[#85522c]">© 2024 AgentHire AI Recruitment OS</span>
-        <div className="flex gap-4">
-          <Link className="text-xs font-semibold text-[#85522c] hover:text-[#944a00] transition-colors" to="#">Privacy Policy</Link>
-          <Link className="text-xs font-semibold text-[#85522c] hover:text-[#944a00] transition-colors" to="#">Terms of Service</Link>
-          <Link className="text-xs font-semibold text-[#85522c] hover:text-[#944a00] transition-colors" to="#">Contact Support</Link>
-        </div>
+        <span className="text-xs font-semibold text-[#85522c]">© {new Date().getFullYear()} AgentHire AI</span>
       </footer>
     </div>
   );
