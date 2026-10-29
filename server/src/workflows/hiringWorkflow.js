@@ -5,6 +5,7 @@ const Workflow = require('../models/Workflow');
 const WorkflowLog = require('../models/WorkflowLog');
 const Candidate = require('../models/Candidate');
 const Job = require('../models/Job');
+const { broadcast } = require('../services/websocketServer');
 
 // Import AI Agents
 const ResumeParserAgent = require('../agents/resumeParserAgent');
@@ -27,14 +28,28 @@ class HiringWorkflowEngine {
     while (attempt < maxRetries) {
       try {
         console.log(`[Workflow ${workflowId}] Executing node '${agentName}' (Attempt ${attempt + 1}/${maxRetries})...`);
+        broadcast('workflow:node_start', {
+          workflowId: String(workflowId),
+          node: agentName,
+          attempt: attempt + 1,
+          status: 'running'
+        });
+
         const output = await agentFn(input);
         
         // Log successful execution
-        await WorkflowLog.create({
+        const logEntry = await WorkflowLog.create({
           workflow_id: workflowId,
           agent_name: agentName,
           input,
           output,
+          status: 'success'
+        });
+
+        broadcast('workflow:node_success', {
+          workflowId: String(workflowId),
+          node: agentName,
+          log: logEntry,
           status: 'success'
         });
 
@@ -45,12 +60,20 @@ class HiringWorkflowEngine {
         
         if (attempt >= maxRetries) {
           // Log final failure
-          await WorkflowLog.create({
+          const failLog = await WorkflowLog.create({
             workflow_id: workflowId,
             agent_name: agentName,
             input,
             status: 'failed',
             error: error.message
+          });
+
+          broadcast('workflow:node_failed', {
+            workflowId: String(workflowId),
+            node: agentName,
+            error: error.message,
+            log: failLog,
+            status: 'failed'
           });
           throw error;
         }
@@ -87,6 +110,13 @@ class HiringWorkflowEngine {
         const node = nodeSequence[i];
         workflow.current_state = node;
         await workflow.save();
+
+        broadcast('workflow:state_change', {
+          workflowId: String(workflow._id),
+          candidateId: String(candidate._id),
+          currentState: node,
+          status: workflow.status
+        });
 
         if (node === 'resume_parser') {
           // Load PDF buffer from disk
@@ -210,6 +240,15 @@ class HiringWorkflowEngine {
           console.log('======================================================\n');
           workflow.status = 'paused_approval';
           await workflow.save();
+
+          // Broadcast human approval checkpoint to all connected WebSocket clients
+          broadcast('workflow:paused_approval', {
+            workflowId: String(workflow._id),
+            candidateId: String(candidate._id),
+            currentState: 'human_approval',
+            status: 'paused_approval'
+          });
+
           return workflow;
         }
 
@@ -270,6 +309,11 @@ class HiringWorkflowEngine {
       // Mark workflow as completed successfully
       workflow.status = 'success';
       await workflow.save();
+      broadcast('workflow:completed', {
+        workflowId: String(workflow._id),
+        candidateId: String(candidate._id),
+        status: 'success'
+      });
       console.log('\n🎉 ======================================================');
       console.log(`🎉 [Workflow ${workflow._id}] ENTIRE MULTI-AGENT PIPELINE FINISHED`);
       console.log('🎉 ======================================================\n');
@@ -278,6 +322,12 @@ class HiringWorkflowEngine {
       console.error(`[Workflow ${workflow._id}] Execution failed:`, error.message);
       workflow.status = 'failed';
       await workflow.save();
+      broadcast('workflow:failed', {
+        workflowId: String(workflow._id),
+        candidateId: String(candidate._id),
+        status: 'failed',
+        error: error.message
+      });
       throw error;
     }
   }

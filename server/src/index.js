@@ -11,9 +11,11 @@ if (fs.existsSync(serverEnvPath)) {
   require('dotenv').config();
 }
 
+const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { initQdrantCollections } = require('./config/qdrant');
+const { initWebSocketServer } = require('./services/websocketServer');
 
 const PORT = process.env.PORT || 5000;
 
@@ -27,9 +29,15 @@ const startServer = async () => {
     await initQdrantCollections();
     console.log('Qdrant collections initialized.');
 
-    // Start Express listener
-    app.listen(PORT, () => {
-      console.log(`Server running in development mode on port ${PORT}`);
+    // Create standard HTTP server wrapping Express
+    const server = http.createServer(app);
+
+    // Attach WebSocket server
+    initWebSocketServer(server);
+
+    // Start HTTP and WebSocket listener
+    server.listen(PORT, () => {
+      console.log(`Server running with WebSockets on port ${PORT}`);
     });
   } catch (error) {
     console.error(`Failed to start server: ${error.message}`);

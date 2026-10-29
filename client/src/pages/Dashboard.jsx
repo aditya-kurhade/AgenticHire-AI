@@ -8,6 +8,7 @@ import CandidatesTab from '../components/dashboard/CandidatesTab';
 import WorkflowsTab from '../components/dashboard/WorkflowsTab';
 import AnalyticsTab from '../components/dashboard/AnalyticsTab';
 import KnowledgeBaseTab from '../components/dashboard/KnowledgeBaseTab';
+import { useRealtimeWorkflow } from '../hooks/useRealtimeWorkflow';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
@@ -177,6 +178,44 @@ const Dashboard = () => {
       setLlmUpdating(false);
     }
   };
+
+  // Real-time WebSocket event handler for dynamic agent updates without page refresh
+  const handleRealtimeEvent = (msg) => {
+    if (!msg || !msg.event) return;
+    const { event, data } = msg;
+
+    console.log(`⚡ [Realtime Dashboard] Event received: ${event}`, data);
+
+    // If event belongs to the currently inspected workflow, update state immediately
+    if (selectedWorkflow && data.workflowId === String(selectedWorkflow._id)) {
+      if (event === 'workflow:node_start') {
+        setSelectedWorkflow(prev => prev ? { ...prev, current_state: data.node, status: 'running' } : prev);
+      } else if (event === 'workflow:paused_approval') {
+        setSelectedWorkflow(prev => prev ? { ...prev, current_state: 'human_approval', status: 'paused_approval' } : prev);
+        setRefreshTrigger(prev => prev + 1);
+      } else if (event === 'workflow:node_success') {
+        if (data.log) {
+          setWorkflowLogs(prev => {
+            const exists = prev.some(l => l._id === data.log._id);
+            return exists ? prev : [data.log, ...prev];
+          });
+        }
+      } else if (event === 'workflow:state_change') {
+        setSelectedWorkflow(prev => prev ? { ...prev, current_state: data.currentState, status: data.status } : prev);
+      } else if (event === 'workflow:completed' || event === 'workflow:failed') {
+        setSelectedWorkflow(prev => prev ? { ...prev, status: data.status } : prev);
+        // Refresh candidate list metrics to update match scores & statuses
+        setRefreshTrigger(prev => prev + 1);
+      }
+    } else {
+      // General state changes trigger light background refresh
+      if (event === 'workflow:completed' || event === 'workflow:failed' || event === 'workflow:paused_approval') {
+        setRefreshTrigger(prev => prev + 1);
+      }
+    }
+  };
+
+  const { isConnected: wsConnected } = useRealtimeWorkflow(handleRealtimeEvent);
 
   useEffect(() => {
     if (!selectedCandidateId) return;
@@ -567,6 +606,18 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Realtime WebSocket Live Pulse Indicator */}
+            <div 
+              title={wsConnected ? "WebSocket Connected: Live agent telemetry enabled" : "WebSocket Disconnected: Attempting reconnect"}
+              className="flex items-center gap-1.5 bg-[#F8F5EF] border border-[#e8ded5] px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-on-surface-variant"
+            >
+              <span className={cn(
+                "w-2 h-2 rounded-full",
+                wsConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-400"
+              )} />
+              <span className="hidden sm:inline">{wsConnected ? "Live" : "Connecting"}</span>
+            </div>
+
             {/* Compact LLM indicator — full controls in Settings */}
             <button
               type="button"
