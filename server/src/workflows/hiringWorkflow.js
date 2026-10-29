@@ -120,27 +120,38 @@ class HiringWorkflowEngine {
         }
 
         else if (node === 'embedding_agent') {
-          const textToEmbed = JSON.stringify(candidate.parsed_resume_json || {});
+          // Serialize parsed resume and raw text into rich semantic text for RAG indexing
+          const parsed = candidate.parsed_resume_json || {};
+          const candidateText = [
+            `Candidate Name: ${candidate.name || parsed.name || ''}`,
+            `Education: ${parsed.education || 'N/A'}`,
+            `Experience: ${parsed.experience || 0} years`,
+            `Skills: ${(parsed.skills || []).join(', ')}`,
+            `Projects: ${(parsed.projects || []).join('. ')}`,
+            `Summary: ${parsed.summary || ''}`
+          ].join('\n');
+
           const result = await this.runWithRetry(
             'embedding_agent',
             async () => {
-              const pointId = Math.floor(Math.random() * 1000000);
-              await EmbeddingAgent.storeChunk('resumes', pointId, textToEmbed, {
-                candidateId: candidate._id.toString()
+              return await EmbeddingAgent.indexFullDocument('resumes', candidate._id.toString(), candidateText, {
+                candidateId: candidate._id.toString(),
+                jobId: job._id.toString(),
+                candidateName: candidate.name,
+                email: candidate.email
               });
-              return { success: true, pointId };
             },
             { candidateId: candidate._id },
             workflow._id
           );
 
           console.log('\n======================================================');
-          console.log('🧠 [Agent 2: Embedding Agent] COMPLETED WORK');
+          console.log('🧠 [Agent 2: Embedding & RAG Indexing Agent] COMPLETED WORK');
           console.log('------------------------------------------------------');
-          console.log(`📦 Collection : 'resumes' in Qdrant Vector Cloud`);
-          console.log(`🔢 Point ID   : ${result.pointId}`);
-          console.log(`📐 Embedding  : 384 dimensions (BAAI/bge-small-en-v1.5)`);
-          console.log(`💾 Stored For : Candidate ID ${candidate._id}`);
+          console.log(`📦 Collection     : 'resumes' in Qdrant Vector Cloud`);
+          console.log(`📑 Indexed Chunks : ${result.indexedChunks || 1}`);
+          console.log(`📐 Embedding Dim  : 384 dimensions (BAAI/bge-small-en-v1.5)`);
+          console.log(`💾 Stored For     : Candidate ID ${candidate._id}`);
           console.log('======================================================\n');
         }
 

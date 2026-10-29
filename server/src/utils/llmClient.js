@@ -135,10 +135,9 @@ async function callLLM(systemPrompt, userPrompt, jsonMode = false) {
   if (!isPlaceholder(groqKey)) {
     const groqCandidateModels = [
       'llama-3.3-70b-versatile',
-      'gemma2-9b-it',
-      'mixtral-8x7b-32768',
-      'llama-3.2-3b-preview',
-      'llama-3.2-1b-preview'
+      'llama-3.1-8b-instant',
+      'llama3-70b-8192',
+      'llama3-8b-8192'
     ];
 
     for (const model of groqCandidateModels) {
@@ -177,14 +176,13 @@ async function callLLM(systemPrompt, userPrompt, jsonMode = false) {
     }
   }
 
-  // 3. Try OpenRouter Free Models
+  // 3. Try OpenRouter Models
   if (!isPlaceholder(openrouterKey)) {
     const openRouterCandidateModels = [
-      'google/gemini-2.0-flash-exp:free',
-      'meta-llama/llama-3.2-3b-instruct:free',
-      'meta-llama/llama-3.2-1b-instruct:free',
-      'deepseek/deepseek-r1:free',
-      'mistralai/mistral-7b-instruct:free'
+      'google/gemini-2.0-flash-001',
+      'deepseek/deepseek-chat',
+      'meta-llama/llama-3.3-70b-instruct',
+      'mistralai/mistral-small-24b-instruct-2501'
     ];
 
     for (const openRouterModel of openRouterCandidateModels) {

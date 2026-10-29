@@ -1,10 +1,15 @@
 {
   "chunking": {
     "resume_chunk_size": 500,
-    "policy_chunk_size": 1000
+    "policy_chunk_size": 1000,
+    "chunk_overlap": 100
   },
   "search": {
     "top_k": 5,
-    "min_similarity": 0.75
+    "min_similarity": 0.70
+  },
+  "embedding": {
+    "dimensions": 384,
+    "model": "BAAI/bge-small-en-v1.5"
   }
 }

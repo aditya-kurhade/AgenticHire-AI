@@ -1,5 +1,5 @@
 const { callLLM } = require('../utils/llmClient');
-const EmbeddingAgent = require('./embeddingAgent');
+const { RAGService, Retriever } = require('../rag/ragService');
 const specLoader = require('../utils/specLoader');
 
 /**
@@ -21,15 +21,14 @@ class MatchingAgent {
     // 1. Fetch RAG settings from spec loader
     const ragSettings = specLoader.loadRagSettings();
     const topK = ragSettings.search?.top_k || 5;
-    const minSimilarity = ragSettings.search?.min_similarity || 0.75;
+    const minSimilarity = ragSettings.search?.min_similarity || 0.65;
 
     // 2. Perform RAG context retrieval from policies collection
-    // (e.g. searching for specific hiring policy terms related to the job title)
-    const searchQuery = `${jobSpec.title} hiring guidelines requirements`;
+    const searchQuery = `${jobSpec.title} ${jobSpec.department || ''} hiring guidelines evaluation criteria`;
     console.log(`📚 [MatchingAgent] Fetching RAG organizational policies for "${searchQuery}"...`);
-    const retrievedDocs = await EmbeddingAgent.searchSimilarity('policies', searchQuery, topK, minSimilarity);
-    const ragContext = retrievedDocs.map(doc => doc.payload?.text || '').join('\n');
-    if (ragContext) {
+    const retrievedDocs = await Retriever.retrieve('policies', searchQuery, { topK, minSimilarity });
+    const ragContext = RAGService.formatContextForPrompt(retrievedDocs, 'ORGANIZATIONAL HIRING POLICIES');
+    if (retrievedDocs.length > 0) {
       console.log(`📖 [MatchingAgent] Injected ${retrievedDocs.length} policy guidelines into RAG context window.`);
     }
 

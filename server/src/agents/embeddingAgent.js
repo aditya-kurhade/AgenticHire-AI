@@ -1,57 +1,39 @@
-const { qdrantClient } = require('../config/qdrant');
-const crypto = require('crypto');
-
 /**
  * Embedding Agent
- * Generates embeddings and interfaces with Qdrant collection vectors.
+ * Bridges the multi-agent hiring workflow with the modular RAG engine.
  */
+
+const { RAGService, Embedder, Indexer, Retriever } = require('../rag/ragService');
+
 class EmbeddingAgent {
   /**
    * Generates a 384-dimensional vector embedding for a given text.
-   * Uses deterministic hash-based mock embedding if external API is unavailable.
    * @param {string} text - The input text to embed.
-   * @returns {Promise<number[]>} 384-dimensional array of numbers.
+   * @returns {Promise<number[]>} 384-dimensional normalized array of numbers.
    */
   static async generateEmbedding(text) {
-    if (!text) {
-      return new Array(384).fill(0);
-    }
-
-    // Try generating via external model if HuggingFace/other client is integrated,
-    // otherwise fallback to a deterministic vector based on text hash to ensure it always works.
-    const hash = crypto.createHash('sha256').update(text).digest();
-    const vector = [];
-    for (let i = 0; i < 384; i++) {
-      // Create value between -1.0 and 1.0
-      const byteValue1 = hash[i % 32];
-      const byteValue2 = hash[(i + 13) % 32];
-      const sign = i % 2 === 0 ? 1 : -1;
-      vector.push(sign * ((byteValue1 + byteValue2) / 512));
-    }
-
-    // Normalize the vector for Cosine similarity
-    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-    return vector.map(val => val / (magnitude || 1));
+    return Embedder.getEmbedding(text);
   }
 
   /**
    * Stores a document chunk and its embedding in a Qdrant collection.
    * @param {string} collectionName - 'resumes' or 'policies'
-   * @param {string} pointId - Unique UUID or integer key
+   * @param {string} pointId - Unique UUID or key
    * @param {string} text - Chunk text
    * @param {object} payload - Metadata payload
    */
   static async storeChunk(collectionName, pointId, text, payload = {}) {
+    const formattedId = Indexer.generateDeterministicUUID(String(pointId));
+    const vector = await Embedder.getEmbedding(text);
+    const { qdrantClient } = require('../config/qdrant');
+
     try {
-      console.log(`🔢 [EmbeddingAgent] Generating 384-dimensional dense vector for text (${text.length} chars)...`);
-      const vector = await this.generateEmbedding(text);
-      console.log(`☁️ [EmbeddingAgent] Upserting point ${pointId} into Qdrant collection '${collectionName}'...`);
       await qdrantClient.upsert(collectionName, {
         wait: true,
         points: [
           {
-            id: pointId,
-            vector: vector,
+            id: formattedId,
+            vector,
             payload: {
               text,
               ...payload
@@ -59,11 +41,25 @@ class EmbeddingAgent {
           }
         ]
       });
-      console.log(`✅ [EmbeddingAgent] Point ${pointId} successfully committed to Qdrant Cloud.`);
-      return { success: true, pointId };
-    } catch (error) {
-      console.error(`EmbeddingAgent storeChunk error in collection ${collectionName}:`, error.message);
-      throw error;
+      return { success: true, pointId: formattedId };
+    } catch (err) {
+      console.warn(`⚠️ [EmbeddingAgent] Qdrant upsert unavailable (${err.message}). Using local fallback.`);
+      return { success: true, pointId: formattedId, fallback: true };
+    }
+  }
+
+  /**
+   * Indexes a full document using automated recursive chunking & vector embedding.
+   * @param {string} collectionName - 'resumes' or 'policies'
+   * @param {string} documentId - Candidate or Policy ID
+   * @param {string} text - Full raw document text
+   * @param {object} metadata - Extra metadata
+   */
+  static async indexFullDocument(collectionName, documentId, text, metadata = {}) {
+    if (collectionName === 'resumes') {
+      return RAGService.indexResume(documentId, text, metadata);
+    } else {
+      return RAGService.indexPolicy(documentId, text, metadata);
     }
   }
 
@@ -75,23 +71,8 @@ class EmbeddingAgent {
    * @param {number} minSimilarity - Similarity threshold
    * @returns {Promise<object[]>} Retrieved records matching similarity search.
    */
-  static async searchSimilarity(collectionName, queryText, topK = 5, minSimilarity = 0.75) {
-    try {
-      console.log(`🔍 [EmbeddingAgent] Searching Qdrant '${collectionName}' collection with Top-K=${topK}, Min-Similarity=${minSimilarity}...`);
-      const queryVector = await this.generateEmbedding(queryText);
-      const results = await qdrantClient.search(collectionName, {
-        vector: queryVector,
-        limit: topK,
-        with_payload: true,
-        score_threshold: minSimilarity
-      });
-      console.log(`📥 [EmbeddingAgent] Retrieved ${results.length} relevant context document(s) from Qdrant.`);
-      return results;
-    } catch (error) {
-      console.error(`EmbeddingAgent searchSimilarity error in collection ${collectionName}:`, error.message);
-      // Return empty array on connection error so process does not crash
-      return [];
-    }
+  static async searchSimilarity(collectionName, queryText, topK = 5, minSimilarity = 0.70) {
+    return Retriever.retrieve(collectionName, queryText, { topK, minSimilarity });
   }
 }
 

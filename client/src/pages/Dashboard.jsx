@@ -7,6 +7,7 @@ import JobSpecsTab from '../components/dashboard/JobSpecsTab';
 import CandidatesTab from '../components/dashboard/CandidatesTab';
 import WorkflowsTab from '../components/dashboard/WorkflowsTab';
 import AnalyticsTab from '../components/dashboard/AnalyticsTab';
+import KnowledgeBaseTab from '../components/dashboard/KnowledgeBaseTab';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { id: 'jobs', label: 'Job Specs', icon: 'description' },
   { id: 'candidates', label: 'Candidates', icon: 'group' },
   { id: 'workflows', label: 'AI Workflows', icon: 'schema' },
+  { id: 'knowledge', label: 'Knowledge Base', icon: 'neurology' },
   { id: 'analytics', label: 'Analytics', icon: 'analytics' },
 ];
 
@@ -27,6 +29,7 @@ const Dashboard = () => {
   const getTabFromPath = (pathname) => {
     if (pathname.includes('/dashboard/candidates')) return 'candidates';
     if (pathname.includes('/dashboard/workflows')) return 'workflows';
+    if (pathname.includes('/dashboard/knowledge')) return 'knowledge';
     if (pathname.includes('/dashboard/analytics')) return 'analytics';
     if (pathname.includes('/dashboard/jobs/create')) return 'jobs';
     if (pathname.includes('/dashboard/jobs')) return 'jobs';
@@ -86,6 +89,7 @@ const Dashboard = () => {
       jobs: '/dashboard/jobs',
       candidates: '/dashboard/candidates',
       workflows: '/dashboard/workflows',
+      knowledge: '/dashboard/knowledge',
       analytics: '/dashboard/analytics'
     };
     if (targetJobId !== undefined) {
@@ -651,6 +655,14 @@ const Dashboard = () => {
                   handleRetryWorkflow={handleRetryWorkflow}
                   llmSettings={llmSettings}
                   nodeColorsSpec={nodeColorsSpec}
+                />
+              )}
+
+              {activeTab === 'knowledge' && (
+                <KnowledgeBaseTab
+                  jobs={jobs}
+                  selectedJobId={selectedJobId}
+                  setSelectedJobId={setSelectedJobId}
                 />
               )}
 

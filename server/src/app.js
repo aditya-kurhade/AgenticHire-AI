@@ -11,6 +11,7 @@ const candidateRoutes = require('./routes/candidates');
 const workflowRoutes = require('./routes/workflow');
 const analyticsRoutes = require('./routes/analytics');
 const settingsRoutes = require('./routes/settings');
+const ragRoutes = require('./routes/rag');
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use('/api/candidates', candidateRoutes);
 app.use('/api/workflow', workflowRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/rag', ragRoutes);
 
 // Root and Health Check Route
 app.get('/api/health', (req, res) => {
