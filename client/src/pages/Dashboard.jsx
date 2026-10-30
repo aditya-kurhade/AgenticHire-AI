@@ -47,6 +47,17 @@ const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarPinned, setSidebarPinned] = useState(() => {
+    return localStorage.getItem('agentichire_sidebar_pinned') === 'true';
+  });
+
+  const toggleSidebarPin = () => {
+    setSidebarPinned(prev => {
+      const next = !prev;
+      localStorage.setItem('agentichire_sidebar_pinned', String(next));
+      return next;
+    });
+  };
 
   const [showCreateModal, setShowCreateModal] = useState(() => location.pathname.includes('/dashboard/jobs/create'));
   const [jobTitle, setJobTitle] = useState('');
@@ -99,6 +110,15 @@ const Dashboard = () => {
     setUtilityTab(null);
     setSidebarOpen(false);
     navigate(tabPaths[tab] || '/dashboard');
+  };
+
+  const openUtilityTab = (tab) => {
+    setUtilityTab(tab);
+    setSidebarOpen(false);
+    // Keep URL clean on utility tab without desyncing
+    if (location.pathname !== '/dashboard') {
+      navigate('/dashboard');
+    }
   };
 
   useEffect(() => {
@@ -344,27 +364,49 @@ const Dashboard = () => {
     };
   }, [searchQuery, jobs, candidates]);
 
-  const isExpanded = sidebarOpen || sidebarHovered;
+  const isExpanded = sidebarOpen || sidebarHovered || sidebarPinned;
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full overflow-hidden">
       <div className={cn(
-        "flex items-center mb-6 transition-all duration-300",
-        isExpanded ? "gap-3 px-2 justify-start" : "justify-center px-0"
+        "flex items-center mb-6 transition-all duration-300 relative",
+        isExpanded ? "gap-3 px-2 justify-between" : "justify-center px-0"
       )}>
-        <div 
-          title="AgentHire AI" 
-          className="w-10 h-10 shrink-0 primary-gradient rounded-xl flex items-center justify-center text-white shadow-sm ring-2 ring-primary/10 cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <div 
+            title="AgentHire AI" 
+            className="w-10 h-10 shrink-0 primary-gradient rounded-xl flex items-center justify-center text-white shadow-sm ring-2 ring-primary/10 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+          </div>
+          <div className={cn(
+            "transition-all duration-300 overflow-hidden whitespace-nowrap",
+            isExpanded ? "opacity-100 max-w-[140px]" : "opacity-0 max-w-0 pointer-events-none hidden lg:block lg:opacity-0"
+          )}>
+            <h1 className="font-bold text-[17px] tracking-tight text-primary leading-tight">AgentHire AI</h1>
+            <p className="text-[11px] font-medium text-on-surface-variant tracking-wide">Enterprise Recruiter</p>
+          </div>
         </div>
-        <div className={cn(
-          "transition-all duration-300 overflow-hidden whitespace-nowrap",
-          isExpanded ? "opacity-100 max-w-[160px]" : "opacity-0 max-w-0 pointer-events-none hidden lg:block lg:opacity-0"
-        )}>
-          <h1 className="font-bold text-[17px] tracking-tight text-primary leading-tight">AgentHire AI</h1>
-          <p className="text-[11px] font-medium text-on-surface-variant tracking-wide">Enterprise Recruiter</p>
-        </div>
+
+        {/* Desktop Pin/Unpin Collapse Toggle */}
+        {isExpanded && (
+          <button
+            type="button"
+            onClick={toggleSidebarPin}
+            title={sidebarPinned ? "Collapse and unpin sidebar" : "Pin sidebar open (content shifts dynamically)"}
+            className="hidden lg:flex p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-[#F8F5EF] transition-colors shrink-0"
+          >
+            <span 
+              className={cn(
+                "material-symbols-outlined text-[19px] transition-transform duration-300",
+                sidebarPinned ? "rotate-45 text-primary" : "text-on-surface-variant"
+              )}
+              style={{ fontVariationSettings: sidebarPinned ? "'FILL' 1" : undefined }}
+            >
+              push_pin
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="mb-5">
@@ -433,7 +475,7 @@ const Dashboard = () => {
 
       <div className="mt-auto border-t border-[#e8ded5] pt-3 space-y-1">
         <button
-          onClick={() => { setUtilityTab('support'); setSidebarOpen(false); }}
+          onClick={() => openUtilityTab('support')}
           title="Support"
           className={cn(
             'flex items-center rounded-xl text-xs font-semibold text-left transition-all group',
@@ -455,7 +497,7 @@ const Dashboard = () => {
         </button>
 
         <button
-          onClick={() => { setUtilityTab('settings'); setSidebarOpen(false); }}
+          onClick={() => openUtilityTab('settings')}
           title="Settings"
           className={cn(
             'flex items-center rounded-xl text-xs font-semibold text-left transition-all group',
@@ -499,7 +541,7 @@ const Dashboard = () => {
         <div className="pt-2 border-t border-[#e8ded5] mt-1">
           <button
             type="button"
-            onClick={() => { setUtilityTab('settings'); setSidebarOpen(false); }}
+            onClick={() => openUtilityTab('settings')}
             title={`${user?.name || 'Recruiter'} (${user?.email || 'Talent Acquisition'})`}
             className={cn(
               "flex items-center rounded-xl transition-all text-left group hover:bg-[#F8F5EF]",
@@ -535,14 +577,14 @@ const Dashboard = () => {
         />
       )}
 
-      {/* SideNavBar — desktop hover-expandable fixed + mobile drawer */}
+      {/* SideNavBar — desktop pinned/hover-expandable fixed + mobile drawer */}
       <aside
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
         className={cn(
           'bg-white border-r border-[#e8ded5] h-screen fixed left-0 top-0 flex flex-col py-5 px-3 z-[70] select-none transition-all duration-300 ease-in-out',
           sidebarOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full lg:translate-x-0',
-          sidebarHovered
+          isExpanded
             ? 'lg:w-64 lg:shadow-[6px_0_28px_rgba(0,0,0,0.08)]'
             : 'lg:w-[72px] lg:shadow-[1px_0_4px_rgba(0,0,0,0.02)]'
         )}
@@ -560,7 +602,14 @@ const Dashboard = () => {
         <SidebarContent />
       </aside>
 
-      <main className="flex-1 lg:ml-[72px] flex flex-col min-h-screen w-full lg:w-[calc(100%-72px)]">
+      <main 
+        className={cn(
+          "flex-1 flex flex-col min-h-screen w-full transition-all duration-300 ease-in-out",
+          isExpanded 
+            ? "lg:pl-64" 
+            : "lg:pl-[72px]"
+        )}
+      >
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] flex justify-between items-center w-full px-4 sm:px-6 lg:px-8 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
@@ -650,7 +699,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="flex-grow w-full px-4 sm:px-6 lg:px-12 py-6 lg:py-10 max-w-[1440px] mx-auto">
+        <div className="flex-grow w-full px-6 sm:px-8 lg:px-10 py-6 lg:py-8 max-w-[1400px]">
           {loading ? (
             <DashboardSkeleton />
           ) : (
