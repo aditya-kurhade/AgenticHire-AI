@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ShieldAlert, Loader2 } from 'lucide-react';
+import { ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Select } from '../components/ui/Select';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -20,7 +22,6 @@ const Signup = () => {
     }
   }, [user, navigate, clearError]);
 
-  // Visual password strength (4 segments)
   const getPasswordStrength = () => {
     if (!password) return 0;
     let score = 0;
@@ -32,18 +33,15 @@ const Signup = () => {
   };
 
   const getStrengthTextAndColor = (strength) => {
-    const colors = ['#E5E7EB', '#EF4444', '#F59E0B', '#10B981', '#10B981'];
     const labels = [
       'Password must be at least 8 characters.',
-      'Weak - try adding numbers',
-      'Fair - keep going!',
+      'Weak - add numbers or symbols',
+      'Fair - keep going',
       'Good password',
-      'Excellent strength!'
+      'Excellent password strength!'
     ];
     return {
-      text: labels[strength],
-      color: strength > 0 ? colors[strength] : '#564337',
-      colorsList: colors
+      text: labels[strength]
     };
   };
 
@@ -67,75 +65,74 @@ const Signup = () => {
   };
 
   const strength = getPasswordStrength();
-  const { text: strengthText, color: strengthColor, colorsList } = getStrengthTextAndColor(strength);
+  const { text: strengthText } = getStrengthTextAndColor(strength);
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] flex items-center justify-center p-0 font-sans selection:bg-[#E67E22]/20">
-      {/* Main Content Grid */}
-      <main className="w-full min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 md:p-8 relative selection:bg-primary/20">
+      <main className="w-full max-w-[1040px] flex flex-col md:flex-row bg-card rounded-2xl overflow-hidden shadow-lg border border-border">
         
-        {/* Left Side: Brand Storytelling & Graphics */}
-        <section className="hidden md:flex md:w-1/2 bg-[#F8F5EF] relative overflow-hidden flex-col justify-center px-12 md:px-16 border-r border-[#dcc1b1]">
-          {/* Animated Background Blobs */}
-          <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#F4B183] opacity-20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-[-5%] right-[-5%] w-80 h-80 bg-[#E67E22] opacity-10 rounded-full blur-3xl animate-pulse duration-10000" style={{ animationDelay: '-5s' }}></div>
-          
-          <div className="relative z-10 max-w-lg">
-            <div className="mb-10">
-              <span className="text-3xl font-extrabold text-[#944a00]">AgentHire AI</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-[#121c2a] mb-6 leading-tight tracking-tight">
-              Empowering the human side of recruitment.
-            </h1>
-            <p className="text-lg text-[#564337] mb-12 leading-relaxed font-medium">
-              Join thousands of talent acquisition leaders using AI to automate the mundane and focus on what matters: building meaningful connections with world-class talent.
-            </p>
-            
-            {/* Graphic Element */}
-            <div className="relative rounded-xl overflow-hidden shadow-md border border-[#dcc1b1] aspect-video bg-white">
-              <img 
-                className="w-full h-full object-cover" 
-                alt="A professional and warm office scene showing HR specialists collaborating" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDv6sfrcIJIhOmBZTvWJ3eQAul4MXtPv2QADQAP5bYPM7jtpoxMABSC74xme_XrqRWq84mqJNvxNkDM98NFNS2dWI_k5u9TNfWkMF4lt6VGKSo1R5561U4rwI5vc97GXOpxlVt78sm3erNF5Wvv7rIfIVmG6n_Zl8DZ_VT3o2CMKDRh70R7BUvDhzR9MxHPeppxer87Sr082COklMgSfd_v9XZ1Np0Gznw501Dh-vXTQsRCtxY4duNgSu154XYL2gxQNpxSSuZWJ4"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            </div>
-
-            <div className="mt-12 flex items-center gap-6">
-              <div className="flex -space-x-3">
-                <div className="w-10 h-10 rounded-full border-2 border-[#F8F5EF] bg-[#d9e3f6]"></div>
-                <div className="w-10 h-10 rounded-full border-2 border-[#F8F5EF] bg-[#dee9fc]"></div>
-                <div className="w-10 h-10 rounded-full border-2 border-[#F8F5EF] bg-[#e6eeff]"></div>
+        {/* Left Side: Branding */}
+        <section className="hidden md:flex w-1/2 bg-secondary/30 p-12 flex-col justify-between relative overflow-hidden border-r border-border">
+          <div className="z-10">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-xs">
+                <Sparkles className="w-4 h-4" />
               </div>
-              <span className="text-sm font-semibold text-[#564337]">Trusted by 500+ talent teams worldwide</span>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">AgentHire AI</h1>
             </div>
+            <p className="text-sm text-muted-foreground font-medium max-w-sm leading-relaxed">
+              Empowering technical recruiters with an autonomous multi-agent operating system.
+            </p>
+          </div>
+
+          <div className="z-10 relative flex items-center justify-center py-6">
+            <div className="w-full max-w-[280px] p-5 rounded-xl bg-card border border-border shadow-xs space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-foreground">Recruiter Workstation</span>
+                <span className="text-primary font-medium text-[10px] bg-primary/10 px-2 py-0.5 rounded">Pro OS</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Connect your job criteria with vector embeddings, semantic scoring, and auto-scheduled screening calls.
+              </p>
+            </div>
+          </div>
+
+          <div className="z-10">
+            <blockquote className="text-xs text-muted-foreground border-l-2 border-primary pl-4 py-1 italic leading-relaxed">
+              "Automate the repetitive resume grind and focus 100% on high-impact talent engagement."
+            </blockquote>
           </div>
         </section>
 
         {/* Right Side: Signup Form */}
-        <section className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-[#FFFDF8]">
-          <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#E5E7EB]">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-[#121c2a] mb-2">Create your account</h2>
-              <p className="text-sm text-[#564337] font-medium">Start your 14-day free trial. No credit card required.</p>
+        <section className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center items-center bg-card">
+          <div className="w-full max-w-sm">
+            <div className="mb-6">
+              <div className="md:hidden flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-foreground">AgentHire AI</span>
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">Create account</h2>
+              <p className="text-xs text-muted-foreground mt-1">Get started with your enterprise recruiting workspace.</p>
             </div>
 
             {(error || passwordError) && (
-              <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 flex items-start gap-3 text-sm">
-                <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div className="mb-5 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-2.5 text-xs">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Error</p>
-                  <p className="text-red-600/90 text-xs mt-0.5">{error || passwordError}</p>
+                  <p className="font-semibold">Registration Notice</p>
+                  <p className="mt-0.5 text-destructive/90">{error || passwordError}</p>
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-semibold text-[#121c2a] mb-1" htmlFor="fullname">Full Name</label>
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-foreground" htmlFor="fullname">Full Name</label>
                 <input 
-                  className="w-full px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#F4B183] focus:border-[#F4B183] outline-none transition-all text-sm text-[#121c2a]" 
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60 transition-all" 
                   id="fullname" 
                   placeholder="Alex Johnson" 
                   type="text"
@@ -145,11 +142,10 @@ const Signup = () => {
                 />
               </div>
 
-              {/* Work Email */}
-              <div>
-                <label className="block text-sm font-semibold text-[#121c2a] mb-1" htmlFor="email">Work Email</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-foreground" htmlFor="email">Work Email</label>
                 <input 
-                  className="w-full px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#F4B183] focus:border-[#F4B183] outline-none transition-all text-sm text-[#121c2a]" 
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60 transition-all" 
                   id="email" 
                   placeholder="alex@company.com" 
                   type="email"
@@ -159,32 +155,27 @@ const Signup = () => {
                 />
               </div>
 
-              {/* Role Dropdown */}
-              <div>
-                <label className="block text-sm font-semibold text-[#121c2a] mb-1" htmlFor="role">Recruiter Role</label>
-                <div className="relative">
-                  <select 
-                    className="w-full appearance-none px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#F4B183] focus:border-[#F4B183] outline-none transition-all text-sm text-[#121c2a] cursor-pointer bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%20fill%3D%22none%22%20stroke%3D%22%2523564337%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.875rem_center] bg-no-repeat pr-10" 
-                    id="role"
-                    required
-                    value={roleSpecialty}
-                    onChange={(e) => setRoleSpecialty(e.target.value)}
-                  >
-                    <option disabled value="">Select your specialty</option>
-                    <option value="technical">Technical Recruiter</option>
-                    <option value="talent_lead">Talent Acquisition Lead</option>
-                    <option value="sourcer">Talent Sourcer</option>
-                    <option value="executive">Executive Search</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-foreground" htmlFor="role">Recruiter Role</label>
+                <Select 
+                  id="role"
+                  required
+                  value={roleSpecialty}
+                  onChange={(e) => setRoleSpecialty(e.target.value)}
+                >
+                  <option disabled value="">Select your specialty</option>
+                  <option value="technical">Technical Recruiter</option>
+                  <option value="talent_lead">Talent Acquisition Lead</option>
+                  <option value="sourcer">Talent Sourcer</option>
+                  <option value="executive">Executive Search</option>
+                  <option value="other">Other</option>
+                </Select>
               </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-semibold text-[#121c2a] mb-1" htmlFor="password">Password</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-foreground" htmlFor="password">Password</label>
                 <input 
-                  className="password-input w-full px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#F4B183] focus:border-[#F4B183] outline-none transition-all text-sm text-[#121c2a]" 
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60 transition-all" 
                   id="password" 
                   placeholder="••••••••" 
                   type="password"
@@ -192,23 +183,33 @@ const Signup = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                {/* Strength Indicator */}
-                <div className="strength-container mt-2 flex gap-1">
-                  <div className="h-1 flex-1 rounded transition-all duration-300" id="meter-1" style={{ backgroundColor: strength >= 1 ? colorsList[strength] : colorsList[0] }}></div>
-                  <div className="h-1 flex-1 rounded transition-all duration-300" id="meter-2" style={{ backgroundColor: strength >= 2 ? colorsList[strength] : colorsList[0] }}></div>
-                  <div className="h-1 flex-1 rounded transition-all duration-300" id="meter-3" style={{ backgroundColor: strength >= 3 ? colorsList[strength] : colorsList[0] }}></div>
-                  <div className="h-1 flex-1 rounded transition-all duration-300" id="meter-4" style={{ backgroundColor: strength >= 4 ? colorsList[strength] : colorsList[0] }}></div>
-                </div>
-                <p className="text-xs font-semibold mt-1.5 transition-colors" style={{ color: strengthColor }} id="strength-text">
-                  {strengthText}
-                </p>
+                {password && (
+                  <div className="pt-1">
+                    <div className="flex gap-1 h-1">
+                      {[1, 2, 3, 4].map(idx => (
+                        <div
+                          key={idx}
+                          className={`flex-1 rounded-full transition-all duration-300 ${
+                            strength >= idx
+                              ? strength >= 3
+                                ? 'bg-emerald-500'
+                                : strength === 2
+                                ? 'bg-amber-500'
+                                : 'bg-red-500'
+                              : 'bg-secondary'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{strengthText}</p>
+                  </div>
+                )}
               </div>
 
-              {/* Confirm Password */}
-              <div className="pb-2">
-                <label className="block text-sm font-semibold text-[#121c2a] mb-1" htmlFor="confirm-password">Confirm Password</label>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-foreground" htmlFor="confirm-password">Confirm Password</label>
                 <input 
-                  className="w-full px-4 py-2 bg-white border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#F4B183] focus:border-[#F4B183] outline-none transition-all text-sm text-[#121c2a]" 
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/60 transition-all" 
                   id="confirm-password" 
                   placeholder="••••••••" 
                   type="password"
@@ -218,37 +219,27 @@ const Signup = () => {
                 />
               </div>
 
-              {/* Primary Action */}
-              <button 
-                className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] w-full py-3 px-4 text-white font-bold rounded-lg shadow-sm hover:shadow-md hover:opacity-95 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2" 
+              <Button 
+                className="w-full mt-2 flex items-center justify-center gap-2" 
                 type="submit"
-                disabled={loading}
+                loading={loading}
+                size="lg"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </button>
+                Create Account
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </form>
 
-            {/* Footer Link */}
-            <p className="mt-8 text-center text-sm text-[#564337]">
+            <p className="mt-6 text-center text-xs text-muted-foreground">
               Already have an account?{' '}
-              <Link className="text-[#944a00] font-bold hover:underline" to="/login">Login</Link>
+              <Link className="text-primary font-semibold hover:underline" to="/login">Login</Link>
             </p>
           </div>
         </section>
       </main>
 
-      {/* Simple Footer */}
-      <footer className="fixed bottom-0 w-full flex justify-center py-2 px-6">
-        <p className="text-xs text-[#564337]/60">
-          © {new Date().getFullYear()} AgentHire AI. All rights reserved.
-        </p>
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+        <span className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} AgentHire AI. All rights reserved.</span>
       </footer>
     </div>
   );

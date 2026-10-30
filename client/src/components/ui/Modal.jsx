@@ -1,58 +1,57 @@
-import { useEffect } from 'react';
+import * as React from 'react';
 import { cn } from '../../lib/utils';
+import { X } from 'lucide-react';
 
-export function Modal({ open, onClose, title, children, className, size = 'md' }) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.();
+export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) {
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
     };
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
     return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [isOpen, onClose]);
 
-  if (!open) return null;
-
-  const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-  };
+  if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-inverse-surface/45 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity animate-in fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Dialog Box */}
+      <div
+        role="dialog"
+        aria-modal="true"
         className={cn(
-          'bg-white rounded-3xl border border-[#e8ded5] p-6 w-full shadow-2xl relative text-left animate-in fade-in zoom-in-95 duration-200',
-          sizes[size],
-          className
+          'relative z-50 w-full overflow-hidden rounded-xl border border-border bg-card p-6 text-card-foreground shadow-lg animate-in fade-in zoom-in-95 duration-200',
+          maxWidth
         )}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-[#F8F5EF] transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px]">close</span>
-        </button>
-        {title && (
-          <h3 id="modal-title" className="text-lg font-bold text-on-surface mb-4 pr-8">
-            {title}
-          </h3>
-        )}
-        {children}
+        <div className="flex items-center justify-between pb-4 border-b border-border">
+          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="mt-4">{children}</div>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
-import { Loader2, ArrowLeft, UploadCloud, CheckCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, ArrowLeft, UploadCloud, CheckCircle2, ShieldAlert, Sparkles, FileText } from 'lucide-react';
+import { Button } from '../components/ui/Button';
 
 const ApplyJob = () => {
   const { jobId } = useParams();
@@ -79,84 +80,86 @@ const ApplyJob = () => {
 
   if (loadingJob) {
     return (
-      <div className="min-h-screen bg-[#FFFDF8] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#FFFDF8] flex items-center justify-center p-6 text-center font-sans">
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-[#dcc1b1] shadow-xl space-y-6 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center border border-green-200">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-card p-8 rounded-2xl border border-border shadow-md space-y-6 flex flex-col items-center">
+          <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+            <CheckCircle2 className="w-7 h-7 text-emerald-600" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-[#121c2a]">Application Received!</h2>
-            <p className="text-sm text-gray-500 font-medium">
-              Thank you for applying. Our multi-agent AI system has initiated parsing and evaluation for the role of:
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Application Received!</h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Thank you for applying. Our multi-agent AI system has initiated parsing and evaluation for:
             </p>
-            <p className="text-base font-bold text-[#944a00]">{job?.title}</p>
+            <p className="text-base font-semibold text-primary">{job?.title}</p>
           </div>
-          <button 
+          <Button 
             onClick={() => navigate('/')} 
-            className="w-full py-3 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white font-bold rounded-xl shadow-md transition-all text-sm hover:opacity-95"
+            className="w-full"
+            size="lg"
           >
             Go Back Home
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col justify-between">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 md:px-12 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] h-16 sticky top-0 z-40">
+      <header className="flex justify-between items-center px-6 md:px-12 bg-card/80 backdrop-blur-md border-b border-border h-16 sticky top-0 z-40">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white text-xs font-bold shadow-sm">AH</div>
-          <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
+          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="font-semibold text-base text-foreground">AgentHire AI</span>
         </Link>
         <Link 
           to={`/jobs/${jobId}`} 
-          className="text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors"
+          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           View Role Details
         </Link>
       </header>
 
       {/* Main Panel */}
-      <main className="flex-grow max-w-2xl mx-auto w-full px-6 py-12">
+      <main className="flex-grow max-w-xl mx-auto w-full px-6 py-10">
         <Link 
           to={`/jobs/${jobId}`} 
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" /> Back to job details
         </Link>
 
-        <div className="bg-white rounded-3xl border border-[#dcc1b1] p-8 md:p-12 shadow-sm space-y-6 text-left">
+        <div className="bg-card rounded-2xl border border-border p-6 md:p-8 shadow-xs space-y-6 text-left">
           <div>
-            <h2 className="text-2xl font-bold text-[#121c2a] mb-1">Submit Application</h2>
-            <p className="text-sm text-gray-500 font-medium">Applying for <span className="text-[#944a00] font-bold">{job?.title}</span></p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground mb-1">Submit Application</h2>
+            <p className="text-xs text-muted-foreground">Applying for <span className="text-foreground font-semibold">{job?.title}</span></p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 flex items-start gap-3 text-sm">
-              <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-2.5 text-xs">
+              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Submission Error</p>
-                <p className="text-red-600/90 text-xs mt-0.5">{error}</p>
+                <p className="text-destructive/90 mt-0.5">{error}</p>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-semibold text-[#121c2a] mb-1.5" htmlFor="fullname">Full Name</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground" htmlFor="fullname">Full Name</label>
               <input 
-                className="w-full px-4 py-2.5 bg-white border border-[#d1d5db] rounded-xl focus:ring-2 focus:ring-[#ffb783] focus:border-[#ffb783] outline-none transition-all text-sm text-[#121c2a]" 
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all" 
                 id="fullname" 
                 placeholder="Alex Johnson" 
                 type="text"
@@ -166,11 +169,10 @@ const ApplyJob = () => {
               />
             </div>
 
-            {/* Email Address */}
-            <div>
-              <label className="block text-sm font-semibold text-[#121c2a] mb-1.5" htmlFor="email">Work Email</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground" htmlFor="email">Work Email</label>
               <input 
-                className="w-full px-4 py-2.5 bg-white border border-[#d1d5db] rounded-xl focus:ring-2 focus:ring-[#ffb783] focus:border-[#ffb783] outline-none transition-all text-sm text-[#121c2a]" 
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all" 
                 id="email" 
                 placeholder="alex@company.com" 
                 type="email"
@@ -180,11 +182,10 @@ const ApplyJob = () => {
               />
             </div>
 
-            {/* Phone Number */}
-            <div>
-              <label className="block text-sm font-semibold text-[#121c2a] mb-1.5" htmlFor="phone">Phone Number (Optional)</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground" htmlFor="phone">Phone Number (Optional)</label>
               <input 
-                className="w-full px-4 py-2.5 bg-white border border-[#d1d5db] rounded-xl focus:ring-2 focus:ring-[#ffb783] focus:border-[#ffb783] outline-none transition-all text-sm text-[#121c2a]" 
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all" 
                 id="phone" 
                 placeholder="+1 555 123 4567" 
                 type="tel"
@@ -193,10 +194,9 @@ const ApplyJob = () => {
               />
             </div>
 
-            {/* Resume Upload (PDF) */}
-            <div>
-              <label className="block text-sm font-semibold text-[#121c2a] mb-1.5">Resume File (PDF only)</label>
-              <div className="border-2 border-dashed border-[#dcc1b1] hover:bg-gray-50 rounded-xl p-6 text-center cursor-pointer relative transition-colors">
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground mb-1">Resume File (PDF only)</label>
+              <div className="border border-dashed border-input hover:border-primary/50 hover:bg-secondary/30 rounded-xl p-6 text-center cursor-pointer relative transition-colors">
                 <input 
                   type="file" 
                   accept=".pdf" 
@@ -204,41 +204,39 @@ const ApplyJob = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <div className="flex flex-col items-center gap-2">
-                  <UploadCloud className="w-8 h-8 text-[#944a00]" />
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+                    <UploadCloud className="w-5 h-5" />
+                  </div>
                   {resume ? (
-                    <span className="text-sm font-bold text-green-600">{resume.name}</span>
+                    <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" />
+                      {resume.name}
+                    </span>
                   ) : (
                     <>
-                      <span className="text-sm font-bold text-[#564337]">Click to upload or drag & drop</span>
-                      <span className="text-xs text-gray-400">PDF up to 10MB</span>
+                      <span className="text-xs font-semibold text-foreground">Click to upload or drag & drop</span>
+                      <span className="text-[11px] text-muted-foreground">PDF file up to 10MB</span>
                     </>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button 
+            <Button 
               type="submit"
-              disabled={submitting}
-              className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] w-full py-3.5 text-white font-bold rounded-xl shadow-lg hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm"
+              loading={submitting}
+              className="w-full mt-2"
+              size="lg"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Submitting Application...
-                </>
-              ) : (
-                'Submit Application'
-              )}
-            </button>
+              Submit Application
+            </Button>
           </form>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-[#ebdccb]/60 py-6 text-center text-xs text-gray-500">
-        © 2024 AgentHire AI Recruitment OS. All rights reserved.
+      <footer className="bg-transparent border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} AgentHire AI Recruitment OS. All rights reserved.
       </footer>
     </div>
   );

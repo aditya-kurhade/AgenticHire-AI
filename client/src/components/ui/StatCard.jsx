@@ -1,31 +1,40 @@
+import React from 'react';
+import { Card, CardContent } from './Card';
 import { cn } from '../../lib/utils';
 
-export function StatCard({ title, value, badge, icon, iconBg = 'bg-amber-100 text-amber-800', className }) {
+export function StatCard({ title, value, badge, icon: Icon, iconBg, className }) {
+  const renderIcon = () => {
+    if (!Icon) return null;
+    if (typeof Icon === 'string') {
+      return <span className="material-symbols-outlined text-[20px]">{Icon}</span>;
+    }
+    if (React.isValidElement(Icon)) {
+      return Icon;
+    }
+    const Component = Icon;
+    return <Component className="w-5 h-5" />;
+  };
+
   return (
-    <div
-      className={cn(
-        'ah-surface p-5 flex flex-col justify-between hover:shadow-sm transition-shadow',
-        className
-      )}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">
-          {title}
-        </span>
-        {icon && (
-          <span className={cn('w-8 h-8 rounded-xl flex items-center justify-center', iconBg)}>
-            <span className="material-symbols-outlined text-[18px]">{icon}</span>
-          </span>
+    <Card className={cn("overflow-hidden hover:border-foreground/20 transition-all", className)}>
+      <CardContent className="p-5 flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-bold tracking-tight text-foreground">{value}</h3>
+            {badge && (
+              <span className="text-[11px] font-medium text-muted-foreground/80">
+                {badge}
+              </span>
+            )}
+          </div>
+        </div>
+        {Icon && (
+          <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", iconBg || "bg-primary/10 text-primary")}>
+            {renderIcon()}
+          </div>
         )}
-      </div>
-      <div className="flex items-baseline justify-between gap-2 mt-1">
-        <span className="text-3xl font-bold text-on-surface tracking-tight tabular-nums">{value}</span>
-        {badge && (
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#F8F5EF] text-on-surface-variant shrink-0">
-            {badge}
-          </span>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

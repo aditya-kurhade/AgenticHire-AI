@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
-import { Loader2, ArrowLeft, Briefcase, Calendar, Award } from 'lucide-react';
+import { Loader2, ArrowLeft, Briefcase, Calendar, Award, Sparkles, ArrowRight } from 'lucide-react';
+import { Button } from '../components/ui/Button';
 
 const JobDetails = () => {
   const { jobId } = useParams();
@@ -26,141 +27,143 @@ const JobDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFFDF8] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-[#FFFDF8] flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md bg-white p-8 rounded-2xl border border-red-100 shadow-sm space-y-4">
-          <p className="text-red-600 font-bold">Error Loading Job</p>
-          <p className="text-sm text-gray-600">{error || 'Job not found.'}</p>
-          <button
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md bg-card p-8 rounded-2xl border border-destructive/20 shadow-xs space-y-4">
+          <p className="text-destructive font-semibold text-base">Error Loading Job</p>
+          <p className="text-xs text-muted-foreground">{error || 'Job specification not found.'}</p>
+          <Button
             onClick={() => navigate('/')}
-            className="px-5 py-2.5 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white rounded-lg text-sm font-bold shadow-md hover:opacity-95"
+            className="w-full"
           >
             Go Back Home
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col justify-between">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 md:px-12 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] h-16 sticky top-0 z-40">
+      <header className="flex justify-between items-center px-6 md:px-12 bg-card/80 backdrop-blur-md border-b border-border h-16 sticky top-0 z-40">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white text-xs font-bold shadow-sm">AH</div>
-          <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
+          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="font-semibold text-base text-foreground">AgentHire AI</span>
         </Link>
         <Link
           to="/"
-          className="text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors"
+          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          Back to home
+          Back to Home
         </Link>
       </header>
 
       {/* Main Panel */}
-      <main className="flex-grow max-w-4xl mx-auto w-full px-6 py-12">
+      <main className="flex-grow max-w-3xl mx-auto w-full px-6 py-10">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" /> Back to open opportunities
         </Link>
 
-        <div className="bg-white rounded-3xl border border-[#dcc1b1] p-8 md:p-12 shadow-sm space-y-8 text-left">
-
+        <div className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-xs space-y-6 text-left">
           {/* Header Info */}
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#121c2a] mb-3 leading-tight">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-3 leading-tight">
               {job.title}
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-[#564337] font-semibold">
-              <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-[#944a00]" /> Full-time</span>
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#944a00]" /> Posted recently</span>
-              <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-[#944a00]" /> {job.min_experience}+ years experience</span>
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground font-medium">
+              <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-primary" /> Full-time</span>
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> Actively Screening</span>
+              <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-primary" /> {job.min_experience}+ years experience</span>
             </div>
           </div>
 
-          <hr className="border-gray-200" />
+          <hr className="border-border/60" />
 
           {/* Description */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold text-[#121c2a]">Role Description</h3>
-            <p className="text-sm text-[#564337] leading-relaxed whitespace-pre-line font-medium">
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Role Description</h3>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-normal">
               {job.description}
             </p>
           </div>
 
-          <hr className="border-gray-200" />
+          <hr className="border-border/60" />
 
           {/* Skills Required */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h4 className="text-base font-bold text-[#121c2a]">Required Core Skills</h4>
-              <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Required Core Skills</h4>
+              <div className="flex flex-wrap gap-1.5">
                 {job.required_skills && job.required_skills.length > 0 ? (
                   job.required_skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="bg-[#ffbb8c]/10 text-[#944a00] px-3.5 py-1 rounded-full text-xs font-bold border border-[#ffbb8c]/30"
+                      className="bg-secondary/70 text-foreground px-2.5 py-1 rounded-md text-xs font-medium border border-border"
                     >
                       {skill}
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-gray-500 font-semibold">No core skills explicitly defined</span>
+                  <span className="text-xs text-muted-foreground">No core skills explicitly defined</span>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="text-base font-bold text-[#121c2a]">Preferred Skills</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preferred Skills</h4>
+              <div className="flex flex-wrap gap-1.5">
                 {job.preferred_skills && job.preferred_skills.length > 0 ? (
                   job.preferred_skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="bg-[#d9e3f6]/40 text-[#121c2a] px-3.5 py-1 rounded-full text-xs font-bold border border-[#d9e3f6]"
+                      className="bg-secondary/40 text-muted-foreground px-2.5 py-1 rounded-md text-xs font-medium border border-border/60"
                     >
                       {skill}
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-gray-500 font-semibold">No preferred skills defined</span>
+                  <span className="text-xs text-muted-foreground">No preferred skills defined</span>
                 )}
               </div>
             </div>
           </div>
 
-          <hr className="border-gray-200" />
+          <hr className="border-border/60" />
 
           {/* Call to Action */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
             <div>
-              <p className="text-xs text-[#564337] font-bold uppercase tracking-wider mb-1">Apply today</p>
-              <p className="text-[11px] text-gray-500">Takes less than 2 minutes to submit your PDF resume.</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-0.5">Apply with your Resume</p>
+              <p className="text-xs text-muted-foreground">Takes less than 2 minutes to submit your PDF resume.</p>
             </div>
-            <button
+            <Button
               onClick={() => navigate(`/jobs/${job._id}/apply`)}
-              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white font-bold text-sm rounded-xl shadow-md hover:opacity-95 active:scale-95 transition-all"
+              className="w-full sm:w-auto flex items-center gap-1.5"
+              size="lg"
             >
               Apply for this Role
-            </button>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
-
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-[#ebdccb]/60 py-6 text-center text-xs text-gray-500">
-        © 2024 AgentHire AI Recruitment OS. All rights reserved.
+      <footer className="bg-transparent border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} AgentHire AI Recruitment OS. All rights reserved.
       </footer>
     </div>
   );

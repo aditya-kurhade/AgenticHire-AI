@@ -10,17 +10,46 @@ import AnalyticsTab from '../components/dashboard/AnalyticsTab';
 import KnowledgeBaseTab from '../components/dashboard/KnowledgeBaseTab';
 import { useRealtimeWorkflow } from '../hooks/useRealtimeWorkflow';
 import { Button } from '../components/ui/Button';
+import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
 import { cn } from '../lib/utils';
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  GitFork,
+  BrainCircuit,
+  BarChart3,
+  HelpCircle,
+  Settings,
+  LogOut,
+  Pin,
+  Search,
+  Briefcase,
+  Cloud,
+  Terminal,
+  Menu,
+  X,
+  Plus,
+  Sparkles,
+  Sun,
+  Moon,
+  Activity,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  ShieldCheck,
+  ChevronDown
+} from 'lucide-react';
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview', icon: 'dashboard' },
-  { id: 'jobs', label: 'Job Specs', icon: 'description' },
-  { id: 'candidates', label: 'Candidates', icon: 'group' },
-  { id: 'workflows', label: 'AI Workflows', icon: 'schema' },
-  { id: 'knowledge', label: 'Knowledge Base', icon: 'neurology' },
-  { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'jobs', label: 'Job Specs', icon: FileText },
+  { id: 'candidates', label: 'Candidates', icon: Users },
+  { id: 'workflows', label: 'AI Workflows', icon: GitFork },
+  { id: 'knowledge', label: 'Knowledge Base', icon: BrainCircuit },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 const Dashboard = () => {
@@ -45,6 +74,21 @@ const Dashboard = () => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('agentichire_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('agentichire_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('agentichire_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarPinned, setSidebarPinned] = useState(() => {
@@ -375,16 +419,16 @@ const Dashboard = () => {
         <div className="flex items-center gap-3 min-w-0">
           <div 
             title="AgentHire AI" 
-            className="w-10 h-10 shrink-0 primary-gradient rounded-xl flex items-center justify-center text-white shadow-sm ring-2 ring-primary/10 cursor-pointer"
+            className="w-10 h-10 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+            <Sparkles className="w-5 h-5" />
           </div>
           <div className={cn(
             "transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[140px]" : "opacity-0 max-w-0 pointer-events-none hidden lg:block lg:opacity-0"
           )}>
-            <h1 className="font-bold text-[17px] tracking-tight text-primary leading-tight">AgentHire AI</h1>
-            <p className="text-[11px] font-medium text-on-surface-variant tracking-wide">Enterprise Recruiter</p>
+            <h1 className="font-bold text-sm tracking-tight text-foreground leading-tight">AgentHire AI</h1>
+            <p className="text-[11px] font-medium text-muted-foreground tracking-wide">Recruitment OS</p>
           </div>
         </div>
 
@@ -393,18 +437,10 @@ const Dashboard = () => {
           <button
             type="button"
             onClick={toggleSidebarPin}
-            title={sidebarPinned ? "Collapse and unpin sidebar" : "Pin sidebar open (content shifts dynamically)"}
-            className="hidden lg:flex p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-[#F8F5EF] transition-colors shrink-0"
+            title={sidebarPinned ? "Unpin sidebar" : "Pin sidebar"}
+            className="hidden lg:flex p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
           >
-            <span 
-              className={cn(
-                "material-symbols-outlined text-[19px] transition-transform duration-300",
-                sidebarPinned ? "rotate-45 text-primary" : "text-on-surface-variant"
-              )}
-              style={{ fontVariationSettings: sidebarPinned ? "'FILL' 1" : undefined }}
-            >
-              push_pin
-            </span>
+            <Pin className={cn("w-4 h-4 transition-transform duration-300", sidebarPinned && "rotate-45 text-primary fill-primary")} />
           </button>
         )}
       </div>
@@ -423,7 +459,7 @@ const Dashboard = () => {
               : "w-10 h-10 p-0 mx-auto rounded-xl flex items-center justify-center"
           )}
         >
-          <span className="material-symbols-outlined text-[20px] shrink-0">add_circle</span>
+          <Plus className="w-4 h-4 shrink-0" />
           <span className={cn(
             "transition-all duration-300 whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[120px] ml-1.5" : "opacity-0 max-w-0 hidden"
@@ -433,35 +469,26 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-1.5">
+      <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id;
+          const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => openDashboardTab(item.id)}
               title={item.label}
               className={cn(
-                'flex items-center rounded-xl text-xs font-semibold transition-all text-left group',
+                'flex items-center rounded-lg text-xs font-medium transition-all text-left group duration-150',
                 isExpanded 
-                  ? 'w-full gap-3 px-3 py-2.5' 
+                  ? 'w-full gap-3 px-3 py-2' 
                   : 'w-10 h-10 mx-auto justify-center p-0',
                 isActive
-                  ? isExpanded
-                    ? 'bg-primary/10 text-primary font-bold shadow-xs border-l-[3px] border-primary'
-                    : 'bg-primary/10 text-primary font-bold shadow-xs ring-1 ring-primary/30'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-[#F8F5EF]'
+                  ? 'bg-secondary text-primary font-semibold shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               )}
             >
-              <span
-                className={cn(
-                  'material-symbols-outlined text-[20px] shrink-0 transition-colors',
-                  isActive ? 'text-primary' : 'text-on-surface-variant group-hover:text-on-surface'
-                )}
-                style={{ fontVariationSettings: isActive ? "'FILL' 1" : undefined }}
-              >
-                {item.icon}
-              </span>
+              <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
               <span className={cn(
                 "transition-all duration-300 overflow-hidden whitespace-nowrap",
                 isExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 hidden"
@@ -473,21 +500,21 @@ const Dashboard = () => {
         })}
       </nav>
 
-      <div className="mt-auto border-t border-[#e8ded5] pt-3 space-y-1">
+      <div className="mt-auto border-t border-border pt-3 space-y-1">
         <button
           onClick={() => openUtilityTab('support')}
           title="Support"
           className={cn(
-            'flex items-center rounded-xl text-xs font-semibold text-left transition-all group',
+            'flex items-center rounded-lg text-xs font-medium text-left transition-all group',
             isExpanded 
               ? 'w-full gap-3 px-3 py-2' 
               : 'w-10 h-10 mx-auto justify-center p-0',
             activeTab === 'support'
-              ? 'bg-primary/10 text-primary font-bold'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-[#F8F5EF]'
+              ? 'bg-secondary text-primary font-semibold'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           )}
         >
-          <span className="material-symbols-outlined text-[19px] shrink-0">help</span>
+          <HelpCircle className="w-4 h-4 shrink-0" />
           <span className={cn(
             "transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 hidden"
@@ -500,16 +527,16 @@ const Dashboard = () => {
           onClick={() => openUtilityTab('settings')}
           title="Settings"
           className={cn(
-            'flex items-center rounded-xl text-xs font-semibold text-left transition-all group',
+            'flex items-center rounded-lg text-xs font-medium text-left transition-all group',
             isExpanded 
               ? 'w-full gap-3 px-3 py-2' 
               : 'w-10 h-10 mx-auto justify-center p-0',
             activeTab === 'settings'
-              ? 'bg-primary/10 text-primary font-bold'
-              : 'text-on-surface-variant hover:text-on-surface hover:bg-[#F8F5EF]'
+              ? 'bg-secondary text-primary font-semibold'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
           )}
         >
-          <span className="material-symbols-outlined text-[19px] shrink-0">settings</span>
+          <Settings className="w-4 h-4 shrink-0" />
           <span className={cn(
             "transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 hidden"
@@ -522,13 +549,13 @@ const Dashboard = () => {
           onClick={handleLogout}
           title="Log Out"
           className={cn(
-            'flex items-center rounded-xl text-xs font-bold text-error hover:bg-error-container/20 transition-all text-left group',
+            'flex items-center rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 transition-all text-left group',
             isExpanded 
               ? 'w-full gap-3 px-3 py-2' 
               : 'w-10 h-10 mx-auto justify-center p-0'
           )}
         >
-          <span className="material-symbols-outlined text-[19px] shrink-0">logout</span>
+          <LogOut className="w-4 h-4 shrink-0" />
           <span className={cn(
             "transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 hidden"
@@ -538,27 +565,27 @@ const Dashboard = () => {
         </button>
 
         {/* User Profile Info Card at Sidebar Bottom */}
-        <div className="pt-2 border-t border-[#e8ded5] mt-1">
+        <div className="pt-2 border-t border-border mt-1">
           <button
             type="button"
             onClick={() => openUtilityTab('settings')}
             title={`${user?.name || 'Recruiter'} (${user?.email || 'Talent Acquisition'})`}
             className={cn(
-              "flex items-center rounded-xl transition-all text-left group hover:bg-[#F8F5EF]",
+              "flex items-center rounded-lg transition-all text-left group hover:bg-accent",
               isExpanded 
-                ? "w-full gap-2.5 p-2 bg-[#F8F5EF]/70 border border-[#e8ded5]" 
+                ? "w-full gap-2.5 p-2 bg-secondary/50 border border-border/60" 
                 : "w-10 h-10 mx-auto justify-center p-0"
             )}
           >
-            <div className="w-9 h-9 shrink-0 rounded-xl bg-primary text-white font-bold flex items-center justify-center text-xs shadow-xs">
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-primary text-primary-foreground font-bold flex items-center justify-center text-xs shadow-xs">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div className={cn(
               "transition-all duration-300 overflow-hidden text-left min-w-0",
               isExpanded ? "opacity-100 max-w-[140px]" : "opacity-0 max-w-0 hidden"
             )}>
-              <p className="text-xs font-bold text-on-surface leading-tight truncate">{user?.name || 'Recruiter'}</p>
-              <p className="text-[10px] text-on-surface-variant font-medium mt-0.5 truncate">{user?.email || 'Talent Acquisition'}</p>
+              <p className="text-xs font-semibold text-foreground leading-tight truncate">{user?.name || 'Recruiter'}</p>
+              <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate">{user?.email || 'Talent Acquisition'}</p>
             </div>
           </button>
         </div>
@@ -567,11 +594,11 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen flex w-full bg-[#FFFDF8]">
+    <div className="min-h-screen flex w-full bg-background text-foreground transition-colors duration-200">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-inverse-surface/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-xs lg:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
@@ -582,21 +609,21 @@ const Dashboard = () => {
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
         className={cn(
-          'bg-white border-r border-[#e8ded5] h-screen fixed left-0 top-0 flex flex-col py-5 px-3 z-[70] select-none transition-all duration-300 ease-in-out',
+          'bg-card border-r border-border h-screen fixed left-0 top-0 flex flex-col py-5 px-3 z-[70] select-none transition-all duration-300 ease-in-out',
           sidebarOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full lg:translate-x-0',
           isExpanded
-            ? 'lg:w-64 lg:shadow-[6px_0_28px_rgba(0,0,0,0.08)]'
-            : 'lg:w-[72px] lg:shadow-[1px_0_4px_rgba(0,0,0,0.02)]'
+            ? 'lg:w-64 lg:shadow-[4px_0_24px_rgba(0,0,0,0.06)]'
+            : 'lg:w-[72px] lg:shadow-none'
         )}
       >
         <div className="flex lg:hidden justify-end mb-2">
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="p-2 rounded-xl hover:bg-[#F8F5EF] text-on-surface-variant"
+            className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Close menu"
           >
-            <span className="material-symbols-outlined">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
         <SidebarContent />
@@ -610,37 +637,37 @@ const Dashboard = () => {
             : "lg:pl-[72px]"
         )}
       >
-        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#e8ded5] flex justify-between items-center w-full px-4 sm:px-6 lg:px-8 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+        <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border flex justify-between items-center w-full px-4 sm:px-6 lg:px-8 py-3 shadow-xs">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
-              className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-[#F8F5EF] text-on-surface"
+              className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-accent text-foreground"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
-              <span className="material-symbols-outlined">menu</span>
+              <Menu className="w-5 h-5" />
             </button>
 
             <button
               type="button"
               onClick={() => { setShowSearchOverlay(true); setSearchQuery(''); }}
-              className="relative hidden sm:flex items-center bg-[#F8F5EF] border border-[#e8ded5] rounded-xl pl-9 pr-3 py-1.5 w-48 lg:w-64 text-xs font-medium text-on-surface-variant hover:border-[#dcc1b1] transition-all text-left"
+              className="relative hidden sm:flex items-center bg-secondary/60 border border-input rounded-lg pl-9 pr-3 py-1.5 w-48 lg:w-64 text-xs font-medium text-muted-foreground hover:border-ring/50 hover:bg-secondary transition-all text-left"
             >
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-[#897365] pointer-events-none">
-                <span className="material-symbols-outlined text-[18px]">search</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-muted-foreground pointer-events-none">
+                <Search className="w-4 h-4" />
               </span>
               <span className="truncate">Search jobs, candidates…</span>
-              <kbd className="ml-auto hidden lg:inline text-[10px] font-bold bg-white border border-[#e8ded5] px-1.5 py-0.5 rounded-md text-on-surface-variant">⌘K</kbd>
+              <kbd className="ml-auto hidden lg:inline text-[10px] font-semibold bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground">⌘K</kbd>
             </button>
 
-            <div className="flex items-center bg-[#F8F5EF] border border-[#e8ded5] rounded-xl px-2.5 sm:px-3 py-1 gap-2 hover:border-[#dcc1b1] transition-colors min-w-0">
-              <span className="material-symbols-outlined text-primary text-[17px] shrink-0">work</span>
+            <div className="relative flex items-center bg-secondary/60 hover:bg-secondary border border-input rounded-lg px-2.5 sm:px-3 py-1 gap-2 hover:border-ring/50 transition-all min-w-0 group shadow-2xs">
+              <Briefcase className="w-4 h-4 text-primary shrink-0" />
               <div className="flex flex-col text-left min-w-0">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/70 leading-none hidden sm:block">Job Context</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none hidden sm:block">Job Context</span>
                 <select
                   value={selectedJobId}
                   onChange={(e) => setSelectedJobId(e.target.value)}
-                  className="bg-transparent border-none text-xs font-bold text-on-surface outline-none cursor-pointer pr-1 py-0.5 max-w-[140px] sm:max-w-[200px] truncate"
+                  className="bg-transparent appearance-none border-none text-xs font-semibold text-foreground outline-none cursor-pointer pr-4 py-0.5 max-w-[130px] sm:max-w-[200px] truncate focus:ring-0 [&>option]:bg-card [&>option]:text-card-foreground"
                   aria-label="Filter by job"
                 >
                   <option value="all">All Openings ({jobs.length})</option>
@@ -651,6 +678,7 @@ const Dashboard = () => {
                   ))}
                 </select>
               </div>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none shrink-0 group-hover:text-foreground transition-colors ml-0.5" />
             </div>
           </div>
 
@@ -658,7 +686,7 @@ const Dashboard = () => {
             {/* Realtime WebSocket Live Pulse Indicator */}
             <div 
               title={wsConnected ? "WebSocket Connected: Live agent telemetry enabled" : "WebSocket Disconnected: Attempting reconnect"}
-              className="flex items-center gap-1.5 bg-[#F8F5EF] border border-[#e8ded5] px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-on-surface-variant"
+              className="flex items-center gap-1.5 bg-secondary/60 border border-border px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-muted-foreground"
             >
               <span className={cn(
                 "w-2 h-2 rounded-full",
@@ -670,31 +698,44 @@ const Dashboard = () => {
             {/* Compact LLM indicator — full controls in Settings */}
             <button
               type="button"
-              onClick={() => setUtilityTab('settings')}
-              className="hidden md:flex items-center gap-1.5 bg-[#F8F5EF] border border-[#e8ded5] px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-on-surface-variant hover:border-primary/40 hover:text-primary transition-all"
+              onClick={() => openUtilityTab('settings')}
+              className="hidden md:flex items-center gap-1.5 bg-secondary/60 border border-border px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all"
               title="LLM engine settings"
             >
-              <span className="material-symbols-outlined text-[14px]">
-                {llmSettings.provider === 'cloud' ? 'cloud' : 'terminal'}
-              </span>
+              {llmSettings.provider === 'cloud' ? (
+                <Cloud className="w-3.5 h-3.5" />
+              ) : (
+                <Terminal className="w-3.5 h-3.5" />
+              )}
               <span>{llmSettings.provider === 'cloud' ? 'Cloud' : 'Ollama'}</span>
               <span
                 className={cn(
                   'w-1.5 h-1.5 rounded-full',
                   llmSettings.provider === 'cloud' || llmSettings.ollamaStatus?.online
                     ? 'bg-emerald-500'
-                    : 'bg-red-400'
+                    : 'bg-destructive'
                 )}
               />
             </button>
 
+            {/* Dark Mode Toggle */}
             <button
               type="button"
-              className="sm:hidden p-2 text-on-surface-variant hover:text-on-surface hover:bg-[#F8F5EF] transition-colors rounded-xl"
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent border border-border transition-colors"
+              title={isDarkMode ? "Switch to Light mode" : "Switch to Dark mode"}
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            <button
+              type="button"
+              className="sm:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-lg"
               onClick={() => { setShowSearchOverlay(true); setSearchQuery(''); }}
               aria-label="Search"
             >
-              <span className="material-symbols-outlined text-[20px]">search</span>
+              <Search className="w-4 h-4" />
             </button>
           </div>
         </header>
@@ -777,19 +818,21 @@ const Dashboard = () => {
               )}
 
               {activeTab === 'support' && (
-                <div className="ah-page">
+                <div className="space-y-6">
                   <div>
-                    <h1 className="text-2xl md:text-[1.75rem] font-bold tracking-tight text-on-surface mb-1">Support & Diagnostics</h1>
-                    <p className="text-sm text-on-surface-variant font-medium max-w-2xl">
+                    <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Support & Diagnostics</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
                       System health, integration connectivity, and agent runtime configuration.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl">
-                    <div className="ah-surface p-6 text-left">
-                      <div className="flex items-center gap-2 mb-5">
-                        <span className="material-symbols-outlined text-primary text-[28px]">health_and_safety</span>
-                        <h3 className="text-lg font-bold text-on-surface">Runtime Status</h3>
+                    <div className="bg-card border border-border rounded-xl p-6 text-left shadow-xs">
+                      <div className="flex items-center gap-2.5 mb-5">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground">Runtime Status</h3>
                       </div>
                       <div className="space-y-3 text-sm">
                         {[
@@ -802,12 +845,13 @@ const Dashboard = () => {
                             ok: !!llmSettings.ollamaStatus?.online
                           },
                         ].map((row) => (
-                          <div key={row.label} className="flex justify-between items-center py-2 border-b border-[#f0e7df] last:border-0">
-                            <span className="text-on-surface-variant">{row.label}</span>
+                          <div key={row.label} className="flex justify-between items-center py-2.5 border-b border-border/50 last:border-0">
+                            <span className="text-muted-foreground font-medium text-xs">{row.label}</span>
                             <span className={cn(
-                              'font-bold text-xs px-2.5 py-1 rounded-lg',
-                              row.ok ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'
+                              'font-medium text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5',
+                              row.ok ? 'text-emerald-600 bg-emerald-500/10' : 'text-amber-600 bg-amber-500/10'
                             )}>
+                              <span className={cn("w-1.5 h-1.5 rounded-full", row.ok ? "bg-emerald-500" : "bg-amber-500")} />
                               {row.value}
                             </span>
                           </div>
@@ -815,18 +859,20 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <div className="ah-surface p-6 text-left flex flex-col justify-between">
+                    <div className="bg-card border border-border rounded-xl p-6 text-left flex flex-col justify-between shadow-xs">
                       <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="material-symbols-outlined text-primary text-[28px]">help</span>
-                          <h3 className="text-lg font-bold text-on-surface">Need Help?</h3>
+                        <div className="flex items-center gap-2.5 mb-4">
+                          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <HelpCircle className="w-5 h-5" />
+                          </div>
+                          <h3 className="text-base font-semibold text-foreground">Need Help?</h3>
                         </div>
-                        <p className="text-sm text-on-surface-variant mb-5 leading-relaxed">
+                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                           For resume parsing or LLM timeouts, check the server console or switch engines in Settings.
                         </p>
                       </div>
-                      <Button variant="outline" className="w-full" onClick={() => window.location.reload()}>
-                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                      <Button variant="outline" className="w-full flex items-center justify-center gap-2" onClick={() => window.location.reload()}>
+                        <RefreshCw className="w-4 h-4" />
                         Refresh App State
                       </Button>
                     </div>
@@ -835,32 +881,32 @@ const Dashboard = () => {
               )}
 
               {activeTab === 'settings' && (
-                <div className="ah-page">
+                <div className="space-y-6">
                   <div>
-                    <h1 className="text-2xl md:text-[1.75rem] font-bold tracking-tight text-on-surface mb-1">Settings</h1>
-                    <p className="text-sm text-on-surface-variant font-medium max-w-2xl">
+                    <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Settings</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
                       Recruitment thresholds and LLM engine configuration.
                     </p>
                   </div>
 
-                  <div className="ah-surface p-6 text-left max-w-2xl">
-                    <h3 className="text-lg font-bold text-on-surface mb-5">LLM & Local Model Engine</h3>
+                  <div className="bg-card border border-border rounded-xl p-6 text-left max-w-2xl shadow-xs">
+                    <h3 className="text-base font-semibold text-foreground mb-4">LLM & Local Model Engine</h3>
                     <div className="space-y-5">
                       <div>
-                        <label className="ah-label">Active Engine Provider</label>
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-2">Active Engine Provider</label>
+                        <div className="flex flex-col sm:flex-row gap-3">
                           <button
                             type="button"
                             disabled={llmUpdating}
                             onClick={() => handleToggleLLMProvider('cloud')}
                             className={cn(
-                              'flex-1 py-2.5 px-4 rounded-xl font-bold border transition-all text-sm flex items-center justify-center gap-2',
+                              'flex-1 py-2.5 px-4 rounded-lg font-medium border transition-all text-sm flex items-center justify-center gap-2',
                               llmSettings.provider === 'cloud'
-                                ? 'bg-primary text-white border-primary shadow-sm'
-                                : 'bg-[#F8F5EF] border-[#e8ded5] text-on-surface-variant hover:bg-white'
+                                ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                                : 'bg-secondary/50 border-input text-muted-foreground hover:bg-secondary hover:text-foreground'
                             )}
                           >
-                            <span className="material-symbols-outlined text-[18px]">cloud</span>
+                            <Cloud className="w-4 h-4" />
                             Cloud (Groq)
                           </button>
                           <button
@@ -868,54 +914,53 @@ const Dashboard = () => {
                             disabled={llmUpdating}
                             onClick={() => handleToggleLLMProvider('ollama')}
                             className={cn(
-                              'flex-1 py-2.5 px-4 rounded-xl font-bold border transition-all text-sm flex items-center justify-center gap-2',
+                              'flex-1 py-2.5 px-4 rounded-lg font-medium border transition-all text-sm flex items-center justify-center gap-2',
                               llmSettings.provider === 'ollama'
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                                : 'bg-[#F8F5EF] border-[#e8ded5] text-on-surface-variant hover:bg-white'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                : 'bg-secondary/50 border-input text-muted-foreground hover:bg-secondary hover:text-foreground'
                             )}
                           >
-                            <span className="material-symbols-outlined text-[18px]">terminal</span>
+                            <Terminal className="w-4 h-4" />
                             Local Ollama
                           </button>
                         </div>
                       </div>
 
                       {llmSettings.provider === 'ollama' && (
-                        <div className="p-4 bg-[#F8F5EF] border border-[#e8ded5] rounded-xl space-y-3">
+                        <div className="p-4 bg-secondary/40 border border-border rounded-lg space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-on-surface">Ollama Status</span>
+                            <span className="text-xs font-semibold text-foreground">Ollama Status</span>
                             <span className={cn(
-                              'text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5',
+                              'text-[11px] px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5',
                               llmSettings.ollamaStatus?.online
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-emerald-500/10 text-emerald-600'
+                                : 'bg-destructive/10 text-destructive'
                             )}>
                               <span className={cn(
-                                'w-2 h-2 rounded-full',
-                                llmSettings.ollamaStatus?.online ? 'bg-emerald-500' : 'bg-red-500'
+                                'w-1.5 h-1.5 rounded-full',
+                                llmSettings.ollamaStatus?.online ? 'bg-emerald-500' : 'bg-destructive'
                               )} />
                               {llmSettings.ollamaStatus?.online ? 'Online & Ready' : 'Disconnected'}
                             </span>
                           </div>
                           <div>
-                            <label className="ah-label">Installed Local Model</label>
+                            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Installed Local Model</label>
                             {llmSettings.ollamaStatus?.models?.length > 0 ? (
-                              <select
+                              <Select
                                 value={llmSettings.ollamaModel}
                                 onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
-                                className="ah-input"
                               >
                                 {llmSettings.ollamaStatus.models.map(m => (
                                   <option key={m} value={m}>{m}</option>
                                 ))}
-                              </select>
+                              </Select>
                             ) : (
                               <input
                                 type="text"
                                 value={llmSettings.ollamaModel}
                                 onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
                                 placeholder="llama3:8b"
-                                className="ah-input"
+                                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                               />
                             )}
                           </div>
@@ -924,16 +969,16 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  <div className="ah-surface p-6 text-left max-w-2xl">
-                    <h3 className="text-lg font-bold text-on-surface mb-5">Integration</h3>
-                    <div className="space-y-3">
+                  <div className="bg-card border border-border rounded-xl p-6 text-left max-w-2xl shadow-xs">
+                    <h3 className="text-base font-semibold text-foreground mb-4">Integration</h3>
+                    <div className="space-y-4">
                       <div>
-                        <label className="ah-label">API Server Address</label>
-                        <input className="ah-input opacity-80" type="text" readOnly value="http://localhost:5000/api" />
+                        <label className="text-xs font-semibold text-muted-foreground block mb-1.5">API Server Address</label>
+                        <input className="w-full bg-secondary/50 border border-input rounded-lg px-3 py-2 text-sm text-muted-foreground cursor-not-allowed select-all" type="text" readOnly value="http://localhost:5000/api" />
                       </div>
                       <div>
-                        <label className="ah-label">Upload Location</label>
-                        <input className="ah-input opacity-80" type="text" readOnly value="server/uploads/" />
+                        <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Upload Location</label>
+                        <input className="w-full bg-secondary/50 border border-input rounded-lg px-3 py-2 text-sm text-muted-foreground cursor-not-allowed select-all" type="text" readOnly value="server/uploads/" />
                       </div>
                     </div>
                   </div>
@@ -943,10 +988,10 @@ const Dashboard = () => {
           )}
         </div>
 
-        <footer className="bg-transparent py-8 mt-4 border-t border-[#e8ded5]/50">
-          <div className="flex flex-col items-center justify-center gap-2 w-full text-center px-4 max-w-[1440px] mx-auto select-none">
-            <span className="text-xs font-bold text-primary">AgentHire AI Recruitment OS</span>
-            <p className="text-xs text-on-surface-variant">© {new Date().getFullYear()} AgentHire AI. All rights reserved.</p>
+        <footer className="bg-transparent py-8 mt-4 border-t border-border/60">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full text-center px-6 sm:px-8 max-w-[1400px] mx-auto select-none">
+            <span className="text-xs font-medium text-foreground">AgentHire AI Recruitment OS</span>
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} AgentHire AI. All rights reserved.</p>
           </div>
         </footer>
       </main>
@@ -957,63 +1002,64 @@ const Dashboard = () => {
         title="Create Job Specification"
       >
         {formError && (
-          <div className="p-3 bg-error-container text-on-error-container text-xs border border-error/20 rounded-xl mb-4 font-semibold">
+          <div className="p-3 bg-destructive/10 text-destructive text-xs border border-destructive/20 rounded-lg mb-4 font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             {formError}
           </div>
         )}
 
-        <form onSubmit={handleCreateJob} className="space-y-3">
+        <form onSubmit={handleCreateJob} className="space-y-4">
           <div>
-            <label className="ah-label !text-on-surface">Job Title</label>
+            <label className="text-xs font-medium text-foreground block mb-1.5">Job Title</label>
             <input
               type="text"
               required
               placeholder="e.g. Senior Full-Stack Engineer"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
-              className="ah-input !bg-white"
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="ah-label !text-on-surface">Job Description</label>
+            <label className="text-xs font-medium text-foreground block mb-1.5">Job Description</label>
             <textarea
               rows="3"
               required
               placeholder="Describe the duties, stack, and details..."
               value={jobDesc}
               onChange={(e) => setJobDesc(e.target.value)}
-              className="ah-input !bg-white resize-none"
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             />
           </div>
           <div>
-            <label className="ah-label !text-on-surface">Minimum Experience (Years)</label>
+            <label className="text-xs font-medium text-foreground block mb-1.5">Minimum Experience (Years)</label>
             <input
               type="number"
               required
               min="0"
               value={jobMinExp}
               onChange={(e) => setJobMinExp(e.target.value)}
-              className="ah-input !bg-white"
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="ah-label !text-on-surface">Required Skills (comma separated)</label>
+            <label className="text-xs font-medium text-foreground block mb-1.5">Required Skills (comma separated)</label>
             <input
               type="text"
               placeholder="React, Node.js, CSS"
               value={jobRequiredSkills}
               onChange={(e) => setJobRequiredSkills(e.target.value)}
-              className="ah-input !bg-white"
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <div>
-            <label className="ah-label !text-on-surface">Preferred Skills (comma separated)</label>
+            <label className="text-xs font-medium text-foreground block mb-1.5">Preferred Skills (comma separated)</label>
             <input
               type="text"
               placeholder="Next.js, Tailwind, Docker"
               value={jobPreferredSkills}
               onChange={(e) => setJobPreferredSkills(e.target.value)}
-              className="ah-input !bg-white"
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <Button type="submit" loading={jobCreating} className="w-full mt-2" size="lg">
@@ -1026,16 +1072,16 @@ const Dashboard = () => {
       {showSearchOverlay && (
         <div
           onClick={() => setShowSearchOverlay(false)}
-          className="fixed inset-0 bg-inverse-surface/45 backdrop-blur-sm z-[100] flex items-start justify-center pt-16 sm:pt-24 px-4"
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[100] flex items-start justify-center pt-16 sm:pt-24 px-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden border border-[#e8ded5] animate-in fade-in zoom-in-95 duration-200"
+            className="bg-card w-full max-w-2xl rounded-xl shadow-xl overflow-hidden border border-border animate-in fade-in zoom-in-95 duration-200"
           >
-            <div className="p-4 flex items-center gap-3 border-b border-[#e8ded5]">
-              <span className="material-symbols-outlined text-primary">search</span>
+            <div className="p-4 flex items-center gap-3 border-b border-border">
+              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
               <input
-                className="w-full border-none focus:ring-0 text-base text-on-surface placeholder-on-surface-variant/50 outline-none"
+                className="w-full bg-transparent border-none focus:ring-0 text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 placeholder="Search job specs or candidates…"
                 type="text"
                 autoFocus
@@ -1044,15 +1090,15 @@ const Dashboard = () => {
               />
               <button
                 type="button"
-                className="text-[11px] text-on-surface-variant hover:text-on-surface font-bold border border-[#e8ded5] px-2 py-1 rounded-lg"
+                className="text-[10px] font-semibold text-muted-foreground border border-border px-1.5 py-0.5 rounded bg-secondary/50 hover:bg-secondary"
                 onClick={() => setShowSearchOverlay(false)}
               >
                 ESC
               </button>
             </div>
-            <div className="p-4 max-h-[60vh] overflow-y-auto ah-scrollbar space-y-5">
+            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-5">
               <div>
-                <h5 className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">
+                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   {searchQuery ? 'Matching Jobs' : 'Recent Jobs'}
                 </h5>
                 <div className="flex flex-col gap-1">
@@ -1064,19 +1110,19 @@ const Dashboard = () => {
                         openDashboardTab('jobs', job._id);
                         setShowSearchOverlay(false);
                       }}
-                      className="flex items-center gap-3 p-2.5 hover:bg-[#F8F5EF] rounded-xl transition-colors text-left w-full"
+                      className="flex items-center gap-3 p-2.5 hover:bg-accent rounded-lg transition-colors text-left w-full"
                     >
-                      <span className="material-symbols-outlined text-on-surface-variant text-[20px]">work</span>
-                      <span className="text-sm font-semibold text-on-surface truncate">{job.title}</span>
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground truncate">{job.title}</span>
                     </button>
                   ))}
                   {searchResults.jobs.length === 0 && (
-                    <span className="text-on-surface-variant text-xs italic p-2">No matching jobs.</span>
+                    <span className="text-muted-foreground text-xs italic p-2">No matching jobs.</span>
                   )}
                 </div>
               </div>
               <div>
-                <h5 className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">
+                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   {searchQuery ? 'Matching Candidates' : 'Recent Candidates'}
                 </h5>
                 <div className="flex flex-col gap-1">
@@ -1089,19 +1135,19 @@ const Dashboard = () => {
                         openDashboardTab('candidates');
                         setShowSearchOverlay(false);
                       }}
-                      className="flex items-center gap-3 p-2.5 hover:bg-[#F8F5EF] rounded-xl transition-colors text-left w-full"
+                      className="flex items-center gap-3 p-2.5 hover:bg-accent rounded-lg transition-colors text-left w-full"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#F8F5EF] border border-[#e8ded5] flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                      <div className="w-7 h-7 rounded-md bg-secondary text-foreground border border-border flex items-center justify-center text-xs font-semibold shrink-0">
                         {c.name?.charAt(0)?.toUpperCase() || 'C'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-on-surface truncate">{c.name}</p>
-                        <p className="text-[11px] text-on-surface-variant truncate">{c.email}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{c.email}</p>
                       </div>
                     </button>
                   ))}
                   {searchResults.candidates.length === 0 && (
-                    <span className="text-on-surface-variant text-xs italic p-2">No matching candidates.</span>
+                    <span className="text-muted-foreground text-xs italic p-2">No matching candidates.</span>
                   )}
                 </div>
               </div>

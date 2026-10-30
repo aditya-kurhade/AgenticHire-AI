@@ -2,9 +2,25 @@ import { useState } from 'react';
 import { PageHeader } from '../ui/PageHeader';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { Select } from '../ui/Select';
 import { StatCard } from '../ui/StatCard';
 import { EmptyState } from '../ui/EmptyState';
 import api from '../../lib/api';
+import {
+  BrainCircuit,
+  Search,
+  PlusCircle,
+  Layers,
+  Ruler,
+  Sliders,
+  Filter,
+  UploadCloud,
+  FileText,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  Database
+} from 'lucide-react';
 
 const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }) => {
   const [activeSubTab, setActiveSubTab] = useState('search'); // 'search' | 'add'
@@ -50,7 +66,6 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
         minSimilarity: Number(minSimilarity)
       };
 
-      // Only pass jobId filter when querying candidate resumes
       if (collection === 'resumes' && activeJobId && activeJobId !== 'all') {
         payload.jobId = activeJobId;
       }
@@ -95,31 +110,33 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
   };
 
   return (
-    <div className="ah-page space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title="RAG Knowledge Base & Vector Index"
         badge={
-          <Badge tone="primary">
-            <span className="material-symbols-outlined text-[14px]">neurology</span>
+          <Badge variant="outline" className="flex items-center gap-1.5 bg-primary/10 text-primary border-primary/20">
+            <BrainCircuit className="w-3.5 h-3.5" />
             Qdrant Cloud (384-d BGE)
           </Badge>
         }
         description="Index organizational hiring standards and query semantic vectors across company guidelines and resumes."
         actions={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant={activeSubTab === 'search' ? 'default' : 'outline'}
               onClick={() => setActiveSubTab('search')}
+              className="flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[18px]">search</span>
+              <Search className="w-3.5 h-3.5" />
               Vector Search
             </Button>
             <Button
               variant={activeSubTab === 'add' ? 'default' : 'outline'}
               onClick={() => setActiveSubTab('add')}
+              className="flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[18px]">post_add</span>
-              Index New Policy
+              <PlusCircle className="w-3.5 h-3.5" />
+              Index Policy
             </Button>
           </div>
         }
@@ -131,61 +148,59 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
           title="Vector Collections"
           value="2 Active"
           badge="'resumes' & 'policies'"
-          icon="folder_special"
-          iconBg="bg-indigo-100 text-indigo-800"
+          icon={Layers}
+          iconBg="bg-primary/10 text-primary"
         />
         <StatCard
           title="Vector Dimensions"
           value="384-d"
           badge="BAAI/bge-small-en-v1.5"
-          icon="straighten"
-          iconBg="bg-emerald-100 text-emerald-800"
+          icon={Ruler}
+          iconBg="bg-emerald-500/10 text-emerald-600"
         />
         <StatCard
           title="Search Metric"
           value="Cosine"
-          badge="Normalized L2 Distance"
-          icon="insights"
-          iconBg="bg-amber-100 text-amber-800"
+          badge="Normalized Similarity"
+          icon={Sliders}
+          iconBg="bg-blue-500/10 text-blue-600"
         />
       </div>
 
       {activeSubTab === 'search' && (
         <div className="space-y-6">
           {/* Search Box Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
-              <span className="material-symbols-outlined text-indigo-600">manage_search</span>
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Search className="w-4 h-4 text-primary" />
               Semantic Vector Query Playground
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Query the vector database using natural language. Concepts, synonyms, and context are automatically matched via dense embeddings.
             </p>
 
             <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Target Collection</label>
-                  <select
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Target Collection</label>
+                  <Select
                     value={collection}
                     onChange={(e) => setCollection(e.target.value)}
-                    className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="resumes">Resumes ('resumes' - Candidate Submissions)</option>
-                    <option value="policies">Policies ('policies' - Organizational Standards)</option>
-                  </select>
+                    <option value="resumes">Resumes (Candidate Submissions)</option>
+                    <option value="policies">Policies (Organizational Standards)</option>
+                  </Select>
                 </div>
 
                 {collection === 'resumes' ? (
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-indigo-600">filter_alt</span>
-                      Filter by Job Opening
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5 flex items-center gap-1">
+                      <Filter className="w-3 h-3 text-primary" />
+                      Filter by Opening
                     </label>
-                    <select
+                    <Select
                       value={activeJobId}
                       onChange={(e) => handleJobChange(e.target.value)}
-                      className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                     >
                       <option value="all">All Job Openings ({jobs.length})</option>
                       {jobs.map((job) => (
@@ -193,21 +208,22 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                           {job.title}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Scope</label>
-                    <div className="w-full text-xs text-slate-500 border border-slate-200 rounded-lg px-3 py-2.5 bg-slate-100">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Scope</label>
+                    <div className="w-full text-xs text-muted-foreground border border-input rounded-lg px-3 py-2.5 bg-secondary/40 font-medium">
                       Global Company Policies
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Min Similarity ({Math.round(minSimilarity * 100)}%)
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Min Similarity</label>
+                    <span className="text-xs font-bold text-primary tabular-nums">{Math.round(minSimilarity * 100)}%</span>
+                  </div>
                   <input
                     type="range"
                     min="0.2"
@@ -215,23 +231,23 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                     step="0.05"
                     value={minSimilarity}
                     onChange={(e) => setMinSimilarity(parseFloat(e.target.value))}
-                    className="w-full mt-2"
+                    className="w-full accent-primary cursor-pointer mt-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Top-K Results</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Top-K Results</label>
                   <input
                     type="number"
                     min="1"
                     max="10"
                     value={topK}
                     onChange={(e) => setTopK(e.target.value)}
-                    className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2.5">
                 <input
                   type="text"
                   placeholder={
@@ -241,19 +257,18 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 text-sm border border-slate-300 rounded-lg px-4 py-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 bg-background border border-input rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
                 />
-                <Button type="submit" disabled={isSearching || !searchQuery.trim()}>
-                  <span className="material-symbols-outlined text-[18px]">
-                    {isSearching ? 'sync' : 'search'}
-                  </span>
+                <Button type="submit" loading={isSearching} disabled={!searchQuery.trim()} className="flex items-center gap-1.5">
+                  <Search className="w-4 h-4" />
                   {isSearching ? 'Searching...' : 'Run Query'}
                 </Button>
               </div>
             </form>
 
             {searchError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 {searchError}
               </div>
             )}
@@ -262,19 +277,19 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
           {/* Results List */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-slate-700">
+              <h4 className="text-sm font-semibold text-foreground">
                 Retrieved Chunks ({searchResults.length})
               </h4>
               {searchResults.length > 0 && (
-                <span className="text-xs text-slate-500">Sorted by Cosine Distance Relevance</span>
+                <span className="text-xs text-muted-foreground">Sorted by Cosine Distance Relevance</span>
               )}
             </div>
 
             {searchResults.length === 0 ? (
               <EmptyState
-                icon="travel_explore"
+                icon={Search}
                 title="No vector results yet"
-                description="Enter a query above to inspect chunks and similarity scores retrieved from the Qdrant vector database."
+                description="Enter a query above to inspect chunks and similarity scores retrieved from the vector database."
               />
             ) : (
               <div className="grid grid-cols-1 gap-3">
@@ -285,50 +300,50 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                   return (
                     <div
                       key={item.id || idx}
-                      className="border border-slate-200 bg-white rounded-xl p-4 shadow-sm hover:border-indigo-300 transition-colors space-y-2"
+                      className="border border-border bg-card rounded-xl p-4 shadow-xs hover:border-primary/50 transition-colors space-y-3"
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2 py-0.5 text-xs font-semibold rounded bg-secondary text-foreground">
                             Chunk #{item.payload?.chunkIndex !== undefined ? item.payload.chunkIndex : idx + 1}
                           </span>
                           {item.payload?.title && (
-                            <span className="text-xs font-medium text-slate-800">
+                            <span className="text-xs font-medium text-foreground">
                               {item.payload.title}
                             </span>
                           )}
                           {item.payload?.category && (
-                            <span className="text-[11px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                            <span className="text-[11px] text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded border border-border">
                               {item.payload.category}
                             </span>
                           )}
                           {item.payload?.candidateName && (
-                            <span className="text-xs font-semibold text-indigo-700">
+                            <span className="text-xs font-semibold text-primary">
                               Candidate: {item.payload.candidateName}
                             </span>
                           )}
                           {item.payload?.jobId && (
-                            <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            <span className="text-[11px] font-medium text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
                               {jobs.find(j => j._id === item.payload.jobId)?.title || `Job: ${item.payload.jobId.slice(-6)}`}
                             </span>
                           )}
                         </div>
 
                         <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${isHighMatch
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
+                          className={`text-xs font-bold px-2 py-0.5 rounded-md tabular-nums ${isHighMatch
+                              ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                             }`}
                         >
                           {scorePercent}% Similarity
                         </span>
                       </div>
 
-                      <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 font-mono whitespace-pre-wrap leading-relaxed">
+                      <p className="text-xs text-foreground bg-secondary/40 p-3 rounded-lg border border-border/60 font-mono whitespace-pre-wrap leading-relaxed">
                         {item.text}
                       </p>
 
-                      <div className="flex items-center gap-4 text-[11px] text-slate-400">
+                      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
                         <span>Point ID: {item.id}</span>
                         {item.payload?.indexedAt && (
                           <span>Indexed: {new Date(item.payload.indexedAt).toLocaleDateString()}</span>
@@ -344,20 +359,20 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
       )}
 
       {activeSubTab === 'add' && (
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm max-w-3xl space-y-5">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-xs max-w-3xl space-y-5">
           <div>
-            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
-              <span className="material-symbols-outlined text-indigo-600">note_add</span>
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <UploadCloud className="w-5 h-5 text-primary" />
               Add Company Hiring Policy or Standard
             </h3>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Documents are automatically split into overlapping chunks, vectorized via 384-d dense embeddings, and made instantly available to the AI Matching Agent.
             </p>
           </div>
 
           <form onSubmit={handleAddPolicy} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
                 Policy Document Title *
               </label>
               <input
@@ -366,16 +381,15 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 placeholder="e.g., Engineering Hiring Standards & Evaluation Rubric 2026"
                 value={policyTitle}
                 onChange={(e) => setPolicyTitle(e.target.value)}
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Associate with Job Opening (Optional)</label>
-              <select
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Associate with Job Opening (Optional)</label>
+              <Select
                 value={policyJobId}
                 onChange={(e) => setPolicyJobId(e.target.value)}
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
               >
                 <option value="">General / All Roles (Global Guideline)</option>
                 {jobs.map((job) => (
@@ -383,25 +397,24 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                     {job.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Category</label>
-              <select
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Category</label>
+              <Select
                 value={policyCategory}
                 onChange={(e) => setPolicyCategory(e.target.value)}
-                className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="engineering">Engineering & Technology</option>
                 <option value="product">Product & Design</option>
                 <option value="compliance">Legal, Compliance & Diversity</option>
                 <option value="general">General Hiring Guidelines</option>
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
                 Policy Content / Markdown Guidelines *
               </label>
               <textarea
@@ -410,18 +423,20 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 placeholder="Paste internal company rubric, minimum educational requirements, tech stack constraints, or interview guidelines here..."
                 value={policyText}
                 onChange={(e) => setPolicyText(e.target.value)}
-                className="w-full text-sm border border-slate-300 rounded-lg p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed font-mono"
+                className="w-full bg-background border border-input rounded-lg p-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed font-mono"
               />
             </div>
 
             {submitSuccess && (
-              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+              <div className="text-xs text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex items-center gap-2 font-medium">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
                 {submitSuccess}
               </div>
             )}
 
             {submitError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 {submitError}
               </div>
             )}
@@ -439,10 +454,8 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
               >
                 Reset
               </Button>
-              <Button type="submit" disabled={isSubmitting || !policyTitle.trim() || !policyText.trim()}>
-                <span className="material-symbols-outlined text-[18px]">
-                  {isSubmitting ? 'sync' : 'cloud_upload'}
-                </span>
+              <Button type="submit" loading={isSubmitting} disabled={!policyTitle.trim() || !policyText.trim()} className="flex items-center gap-1.5">
+                <UploadCloud className="w-4 h-4" />
                 {isSubmitting ? 'Vectorizing...' : 'Save & Index Document'}
               </Button>
             </div>
@@ -454,4 +467,3 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
 };
 
 export default KnowledgeBaseTab;
-

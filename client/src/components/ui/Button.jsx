@@ -1,52 +1,56 @@
-import { cva } from 'class-variance-authority';
-import { cn } from '../../lib/utils';
-import { Loader2 } from 'lucide-react';
+import * as React from "react"
+import { cva } from "class-variance-authority"
+import { cn } from "../../lib/utils"
+import { Loader2 } from "lucide-react"
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
-        primary: 'primary-gradient text-white shadow-sm hover:shadow hover:brightness-105',
-        secondary: 'bg-primary text-white shadow-xs hover:brightness-105',
-        outline: 'border border-[#e8ded5] bg-white text-on-surface-variant hover:bg-[#F8F5EF] hover:text-on-surface shadow-2xs',
-        ghost: 'text-on-surface-variant hover:bg-[#F8F5EF] hover:text-on-surface',
-        soft: 'bg-[#F8F5EF] border border-[#e8ded5] text-primary hover:border-primary hover:bg-primary/5',
-        danger: 'bg-error-container/40 text-error border border-error/20 hover:bg-error-container',
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        primary:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90", // alias
       },
       size: {
-        sm: 'px-2.5 py-1.5 text-[11px]',
-        md: 'px-4 py-2.5',
-        lg: 'px-5 py-3 text-sm',
-        icon: 'p-2',
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-lg px-6",
+        icon: "h-9 w-9 p-0",
+        md: "h-9 px-4 py-2", // alias
       },
     },
     defaultVariants: {
-      variant: 'primary',
-      size: 'md',
+      variant: "default",
+      size: "default",
     },
   }
-);
+)
 
-export function Button({
-  className,
-  variant,
-  size,
-  loading = false,
-  disabled,
-  children,
-  ...props
-}) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-      {children}
-    </button>
-  );
-}
+const Button = React.forwardRef(
+  ({ className, variant, size, loading = false, disabled, children, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && <Loader2 className="w-4 h-4 animate-spin text-current" />}
+        {children}
+      </button>
+    )
+  }
+)
+Button.displayName = "Button"
 
-export { buttonVariants };
+export { Button, buttonVariants }
