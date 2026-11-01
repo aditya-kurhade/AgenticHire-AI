@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { ShieldAlert, Mail, Lock, Eye, EyeOff, Loader2, Sparkles, ArrowRight } from 'lucide-react';
+import { ShieldAlert, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 const Login = () => {

@@ -88,7 +88,7 @@ export default function WorkflowsTab({
               <h3 className="text-sm font-semibold text-foreground">Select Candidate</h3>
               <Badge variant="secondary">{candidates.length}</Badge>
             </div>
-            <div className="space-y-1.5 overflow-y-auto max-h-[520px] pr-1">
+            <div className="space-y-1.5 overflow-y-auto max-h-[520px] pr-0.5 no-scrollbar">
               {candidates.map((c) => (
                 <button
                   key={c._id}
@@ -256,7 +256,7 @@ export default function WorkflowsTab({
                 </div>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
-              <div className="flex-1 p-3.5 font-mono text-[11px] leading-relaxed overflow-y-auto space-y-2">
+              <div className="flex-1 p-3.5 font-mono text-[11px] leading-relaxed overflow-y-auto space-y-2 no-scrollbar">
                 {workflowLogs.length > 0 ? (
                   workflowLogs.map((log, idx) => (
                     <div key={log._id || idx} className="border-b border-slate-800/80 pb-2">

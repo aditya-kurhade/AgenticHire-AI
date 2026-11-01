@@ -9,9 +9,18 @@ import {
   Zap,
   BarChart3,
   Filter,
-  TrendingUp,
-  PieChart
+  TrendingUp
 } from 'lucide-react';
+
+const MetricValue = ({ value, suffix = '%' }) => (
+  value != null ? (
+    <span className="text-3xl font-bold text-foreground tracking-tight tabular-nums">
+      {value}{suffix}
+    </span>
+  ) : (
+    <span className="text-xl font-medium text-muted-foreground">No data yet</span>
+  )
+);
 
 export default function AnalyticsTab({
   analyticsData,
@@ -59,16 +68,6 @@ export default function AnalyticsTab({
     a.download = `agentic_hire_analytics_${Date.now()}.json`;
     a.click();
   };
-
-  const MetricValue = ({ value, suffix = '%' }) => (
-    value != null ? (
-      <span className="text-3xl font-bold text-foreground tracking-tight tabular-nums">
-        {value}{suffix}
-      </span>
-    ) : (
-      <span className="text-xl font-medium text-muted-foreground">No data yet</span>
-    )
-  );
 
   return (
     <div className="space-y-6">

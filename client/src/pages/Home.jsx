@@ -2,272 +2,333 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { 
   Bot, 
-  Award, 
+  Sparkles,
   UploadCloud, 
-  FileSearch, 
+  FileText, 
   GitBranch, 
   UserCheck, 
   Calendar, 
-  Send, 
-  Users, 
   ArrowRight, 
-  Globe, 
-  Share2 
+  ShieldCheck, 
+  Zap, 
+  Layers, 
+  Cpu, 
+  Check, 
+  Lock,
+  Globe
 } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 
 const Home = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FFFDF8] text-[#121c2a] font-sans selection:bg-[#E67E22]/20 flex flex-col antialiased">
+    <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/20">
       {/* Top Navigation Bar */}
-      <header className="flex justify-between items-center px-6 md:px-12 w-full sticky top-0 z-50 bg-[#FFFDF8]/85 backdrop-blur-md h-16 border-b border-[#e8ded5]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg primary-gradient flex items-center justify-center text-white shadow-sm">
-            <Bot className="w-4.5 h-4.5" />
+      <header className="flex justify-between items-center px-6 md:px-12 w-full sticky top-0 z-50 bg-background/80 backdrop-blur-md h-16 border-b border-border">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <span className="font-bold text-lg text-[#944a00]">AgentHire AI</span>
-        </div>
+          <span className="font-semibold text-base tracking-tight text-foreground">AgentHire AI</span>
+        </Link>
         
-        <nav className="hidden md:flex items-center space-x-8">
-          <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#features">Features</a>
-          <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#workflow">Workflows</a>
-          <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#agents">AI Agents</a>
-          <a className="text-[#564337] hover:text-[#944a00] transition-colors font-semibold text-sm" href="#pricing">Pricing</a>
+        <nav className="hidden md:flex items-center space-x-7">
+          <a className="text-muted-foreground hover:text-foreground transition-colors font-medium text-xs" href="#workflow">Workflow</a>
+          <a className="text-muted-foreground hover:text-foreground transition-colors font-medium text-xs" href="#features">Capabilities</a>
+          <a className="text-muted-foreground hover:text-foreground transition-colors font-medium text-xs" href="#agents">AI Agents</a>
+          <a className="text-muted-foreground hover:text-foreground transition-colors font-medium text-xs" href="#pricing">Pricing</a>
         </nav>
 
-        <div className="flex items-center gap-3">
-          {!user && (
-            <button 
-              onClick={() => navigate('/login')}
-              className="hidden sm:inline text-sm font-semibold text-[#564337] hover:text-[#944a00] transition-colors px-2"
+        <div className="flex items-center gap-2.5">
+          {!user ? (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/login')}
+                className="hidden sm:inline-flex text-xs"
+              >
+                Sign In
+              </Button>
+              <Button 
+                size="sm"
+                onClick={() => navigate('/signup')}
+                className="text-xs"
+              >
+                Get Started Free
+              </Button>
+            </>
+          ) : (
+            <Button 
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="text-xs flex items-center gap-1.5"
             >
-              Sign In
-            </button>
+              Open Dashboard
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
           )}
-          <button 
-            onClick={() => navigate(user ? '/dashboard' : '/signup')}
-            className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-90 text-white px-5 py-2 rounded-xl font-semibold text-sm shadow-sm active:scale-[0.98] transition-all"
-          >
-            {user ? 'Dashboard' : 'Get Started'}
-          </button>
         </div>
       </header>
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative pt-16 pb-32 px-6 md:px-12 overflow-hidden bg-gradient-to-b from-[#FFFDF8] to-[#faf5ee]">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="space-y-6 text-center">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ffbb8c]/10 border border-[#ffbb8c]/30 rounded-full mx-auto">
-                <Award className="text-[#85522c] w-4.5 h-4.5" />
-                <span className="text-[#85522c] font-semibold text-xs uppercase tracking-wider">Trusted by 500+ HR Leaders</span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-extrabold text-[#121c2a] max-w-2xl leading-tight mx-auto tracking-tight">
-                AI Recruitment <span className="text-[#944a00]">Operating System</span>
-              </h1>
-              <p className="text-lg md:text-xl text-[#564337] max-w-xl mx-auto leading-relaxed">
-                Automate screening, intelligent matching, and interview scheduling. Give your team the bandwidth to focus on what matters: the human connection.
-              </p>
-              <div className="flex flex-wrap gap-4 pt-2 justify-center">
-                <button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-gradient-to-r from-[#E67E22] to-[#F59E0B] hover:opacity-95 text-white px-10 py-4 rounded-xl font-semibold text-base shadow-lg active:scale-[0.98] transition-all"
-                >
-                  Get Started Free
-                </button>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="bg-white border border-[#dcc1b1] text-[#121c2a] hover:bg-[#F8F5EF] px-10 py-4 rounded-xl font-semibold text-base shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
-                >
-                  Sign In
-                </button>
+        <section className="relative pt-20 pb-28 px-6 md:px-12 overflow-hidden border-b border-border/60">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="max-w-5xl mx-auto relative z-10 text-center space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/80 border border-border text-foreground text-xs font-medium shadow-2xs">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>AgenticHire 2.0 • Autonomous Multi-Agent OS</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground max-w-4xl mx-auto leading-[1.12]">
+              The Autonomous AI Operating System for <span className="bg-gradient-to-r from-primary via-indigo-500 to-primary bg-clip-text text-transparent">Technical Hiring</span>
+            </h1>
+
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Eliminate resume screening fatigue with orchestrated AI agents. Semantic RAG matching, vector indexing, automated checkpoints, and human gatekeepers.
+            </p>
+
+            <div className="flex flex-wrap gap-3 pt-2 justify-center">
+              <Button 
+                size="lg"
+                onClick={() => navigate(user ? '/dashboard' : '/signup')}
+                className="flex items-center gap-2 px-8"
+              >
+                {user ? 'Go to Dashboard' : 'Start Free 14-Day Trial'}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/login')}
+                className="px-8"
+              >
+                Recruiter Sign In
+              </Button>
+            </div>
+
+            {/* Pipeline Preview Surface */}
+            <div className="pt-10 max-w-4xl mx-auto">
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-md text-left space-y-5">
+                <div className="flex items-center justify-between pb-4 border-b border-border/60">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-red-500/80" />
+                    <span className="w-3 h-3 rounded-full bg-amber-500/80" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                    <span className="text-xs text-muted-foreground font-mono ml-2">agentic-recruiter-runtime.sh</span>
+                  </div>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                    Telemetry Online
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Resume Ingest</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">PDF Parsing & OCR</p>
+                    <span className="text-[11px] text-emerald-600 font-medium">bge-small 384-d</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Vector Search</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">Semantic Scoring</p>
+                    <span className="text-[11px] text-primary font-medium">Cosine Distance</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground block">LLM Reasoning</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">Threshold Match</p>
+                    <span className="text-[11px] text-blue-600 font-medium">Groq / Ollama</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Human Review</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">Gatekeeper Lock</p>
+                    <span className="text-[11px] text-amber-600 font-medium">1-Click Approve</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Workflow Diagram Section */}
-        <section className="py-16 px-6 md:px-12 bg-[#eff4ff]/30 border-y border-[#ebdccb]/40" id="workflow">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-[#121c2a]">Precision Hiring Workflow</h2>
-              <p className="text-base text-[#564337] mt-2 font-medium">From discovery to offer, handled with intelligent automation.</p>
+        <section className="py-20 px-6 md:px-12 bg-secondary/20 border-b border-border/60" id="workflow">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16 space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Precision Multi-Agent Pipeline</h2>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                Every applicant flows through automated checkpoints with zero manual spreadsheet handling.
+              </p>
             </div>
             
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative max-w-5xl mx-auto">
-              {/* Step 1 */}
-              <div className="flex-1 text-center group w-full md:w-auto">
-                <div className="w-16 h-16 mx-auto bg-white rounded-2xl flex items-center justify-center border border-[#dcc1b1] shadow-sm hover:border-[#944a00] transition-colors mb-3">
-                  <UploadCloud className="text-[#944a00] w-7 h-7" />
-                </div>
-                <p className="text-sm font-semibold text-[#121c2a]">Resume Upload</p>
-              </div>
-              <div className="hidden md:block w-12 h-px bg-[#dcc1b1]"></div>
-
-              {/* Step 2 */}
-              <div className="flex-1 text-center group w-full md:w-auto">
-                <div className="w-16 h-16 mx-auto bg-white rounded-2xl flex items-center justify-center border border-[#dcc1b1] shadow-sm hover:border-[#944a00] transition-colors mb-3">
-                  <FileSearch className="text-[#944a00] w-7 h-7" />
-                </div>
-                <p className="text-sm font-semibold text-[#121c2a]">AI Parser</p>
-              </div>
-              <div className="hidden md:block w-12 h-px bg-[#dcc1b1]"></div>
-
-              {/* Step 3 */}
-              <div className="flex-1 text-center group w-full md:w-auto">
-                <div className="w-16 h-16 mx-auto bg-white rounded-2xl flex items-center justify-center border border-[#dcc1b1] shadow-sm hover:border-[#944a00] transition-colors mb-3">
-                  <GitBranch className="text-[#944a00] w-7 h-7" />
-                </div>
-                <p className="text-sm font-semibold text-[#121c2a]">Skill Matching</p>
-              </div>
-              <div className="hidden md:block w-12 h-px bg-[#dcc1b1]"></div>
-
-              {/* Step 4 */}
-              <div className="flex-1 text-center group w-full md:w-auto">
-                <div className="w-16 h-16 mx-auto bg-white rounded-2xl flex items-center justify-center border border-[#dcc1b1] shadow-sm hover:border-[#944a00] transition-colors mb-3">
-                  <UserCheck className="text-[#944a00] w-7 h-7" />
-                </div>
-                <p className="text-sm font-semibold text-[#121c2a]">Human Approval</p>
-              </div>
-              <div className="hidden md:block w-12 h-px bg-[#dcc1b1]"></div>
-
-              {/* Step 5 */}
-              <div className="flex-1 text-center group w-full md:w-auto">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-r from-[#E67E22] to-[#F59E0B] rounded-2xl flex items-center justify-center border border-transparent shadow-md mb-3">
-                  <Calendar className="text-white w-7 h-7" />
-                </div>
-                <p className="text-sm font-bold text-[#121c2a]">Interview Set</p>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 relative">
+              {[
+                { title: 'Resume Upload', desc: 'Public portal drag-and-drop', icon: UploadCloud, tag: 'Intake' },
+                { title: 'Dense Parser', desc: 'Vector embeddings in Qdrant', icon: FileText, tag: '384-d' },
+                { title: 'Skill Matcher', desc: 'RAG threshold compatibility', icon: GitBranch, tag: 'Scoring' },
+                { title: 'Human Gate', desc: 'Recruiter approval checkpoint', icon: UserCheck, tag: 'Gatekeeper' },
+                { title: 'Interview Agent', desc: 'Automated candidate invite', icon: Calendar, tag: 'Scheduled' }
+              ].map((step, idx) => {
+                const Icon = step.icon;
+                return (
+                  <div 
+                    key={idx}
+                    className="bg-card border border-border rounded-xl p-4 shadow-xs flex flex-col justify-between hover:border-primary/50 transition-all group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-mono font-semibold text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                          0{idx + 1}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground">{step.title}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
+                    </div>
+                    <div className="mt-4 pt-2 border-t border-border/50">
+                      <span className="text-[10px] font-medium text-primary uppercase tracking-wider">{step.tag}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
         {/* Features Bento Grid */}
-        <section className="py-20 px-6 md:px-12" id="features">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              
+        <section className="py-20 px-6 md:px-12 border-b border-border/60" id="features">
+          <div className="max-w-5xl mx-auto space-y-12">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Engineered for Technical Recruiter Speed</h2>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                Built from the ground up to eliminate candidate ghosting and accelerate time-to-hire.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
               {/* Feature 1 */}
-              <div className="md:col-span-8 bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col md:flex-row gap-8 items-center">
-                <div className="flex-1 space-y-4">
-                  <h3 className="text-2xl font-bold text-[#121c2a]">Context-Aware Screening</h3>
-                  <p className="text-sm text-[#564337] leading-relaxed">
-                    Our AI agents read between the lines of a resume, identifying core competencies and cultural fit through advanced semantic analysis.
+              <div className="md:col-span-8 bg-card p-6 md:p-8 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Semantic Vector Screening</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    Traditional ATS systems search for keywords and miss top engineers. AgentHire uses dense BGE embeddings stored in Qdrant to understand architecture expertise, synonyms, and engineering depth.
                   </p>
-                  <a className="inline-flex items-center text-[#944a00] font-bold text-sm gap-1 hover:underline" href="#">
-                    Learn more <ArrowRight className="w-4 h-4" />
-                  </a>
                 </div>
-                <div className="flex-1 w-full h-48 bg-[#eff4ff] rounded-xl overflow-hidden shadow-inner border border-gray-100">
-                  <div 
-                    className="w-full h-full bg-cover bg-center" 
-                    style={{ backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyxiI9hAR7mY4kFtiFQICdhl_wkR5yVrNsc3cgFDU6u8OoZiAX6ccpkRUjWnQvIpsSd-MsBjPjzAy12A9V6m3-BOY8bY8IZk0ocoajGg-vkHFP_xZJhi3MLUqGa9-bSIPmAlI-AairWcx-Vm6X_3xrYhwXMHIt9BYEUGhArCuFaVdY4dcOdoqAo7y4VuRdPv6D6SCPI3IfUMz7uxJ6bdvA8o3sII97nm75JSmzGixQFgtRstqwisWvyMLQiJ8Z2suXmTWAb41yN7o')` }}
-                  ></div>
+                <div className="p-3.5 bg-secondary/50 rounded-lg border border-border font-mono text-xs text-muted-foreground flex items-center justify-between">
+                  <span>Cosine Similarity Threshold: 85%</span>
+                  <span className="text-emerald-600 font-semibold">Match Found</span>
                 </div>
               </div>
 
               {/* Feature 2 */}
-              <div className="md:col-span-4 bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 bg-[#ffbb8c]/20 rounded-xl flex items-center justify-center mb-6">
-                    <Send className="text-[#85522c] w-6 h-6" />
+              <div className="md:col-span-4 bg-card p-6 md:p-8 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#121c2a] mb-2">Auto-Scheduling</h3>
-                  <p className="text-xs text-[#564337] leading-relaxed">
-                    Syncs with your calendar to find the perfect slot for both interviewer and candidate instantly.
+                  <h3 className="text-lg font-semibold text-foreground">Human-in-the-Loop</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    AI never rejects without your authorization. Configurable checkpoints pause the pipeline so human recruiters hold final approval.
                   </p>
                 </div>
+                <Badge variant="outline" className="w-fit text-emerald-600 border-emerald-500/20 bg-emerald-500/10 text-[10px]">
+                  Zero Silent Rejections
+                </Badge>
               </div>
 
               {/* Feature 3 */}
-              <div className="md:col-span-4 bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 bg-[#ffdcc5]/20 rounded-xl flex items-center justify-center mb-6">
-                    <Users className="text-[#944a00] w-6 h-6" />
+              <div className="md:col-span-4 bg-card p-6 md:p-8 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                    <Cpu className="w-4 h-4" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#121c2a] mb-2">Bias Prevention</h3>
-                  <p className="text-xs text-[#564337] leading-relaxed">
-                    Anonymize candidate profiles to focus purely on skills and achievements during initial stages.
+                  <h3 className="text-lg font-semibold text-foreground">Dual-Engine Runtime</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Switch between lightning-fast cloud LLMs via Groq and local air-gapped models via Ollama (Llama-3 8B) for complete data privacy.
                   </p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded font-mono text-muted-foreground">Groq Cloud</span>
+                  <span className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded font-mono text-muted-foreground">Local Ollama</span>
                 </div>
               </div>
 
               {/* Feature 4 */}
-              <div className="md:col-span-8 bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col md:flex-row-reverse gap-8 items-center">
-                <div className="flex-1 space-y-4">
-                  <h3 className="text-2xl font-bold text-[#121c2a]">Collaborative Portals</h3>
-                  <p className="text-sm text-[#564337] leading-relaxed">
-                    Shared workspaces where hiring managers and recruiters can leave feedback and score candidates in real-time.
+              <div className="md:col-span-8 bg-card p-6 md:p-8 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Candidate Application Portals</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    Every created job specification generates a public candidate portal link where applicants can submit PDF resumes in under two minutes.
                   </p>
-                  <a className="inline-flex items-center text-[#944a00] font-bold text-sm gap-1 hover:underline" href="#">
-                    See how it works <ArrowRight className="w-4 h-4" />
-                  </a>
                 </div>
-                <div className="flex-1 w-full h-48 bg-[#eff4ff] rounded-xl overflow-hidden shadow-inner border border-gray-100">
-                  <div 
-                    className="w-full h-full bg-cover bg-center" 
-                    style={{ backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJfkLq19P97jNSgycTt5-sDCKFmAqzqkpGR2S63zOUjztcQlbOkI85fzZa4AAjTeXtWGWf0w-a3KVTnh9CG8J0-5TUNI3TNtn0jae88c2GaDG_VUxddX8ciWTmZqSvZLgZxU_0Q5zJC1MXNbzoVQWnUdg0ho6b4QK3IlTHVqpd0G1LVME0-chmk_8di33KHoqBQtljP4BrheFD2g59UMWZcQmK7n99frPoN73yEvgK13EctNHcHhsttW9kkQMWUPAYezOcgR9oLRA')` }}
-                  ></div>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')} className="text-xs">
+                    View Live Portal Example
+                  </Button>
                 </div>
               </div>
-
             </div>
           </div>
         </section>
 
         {/* AI Agents Section */}
-        <section className="py-20 px-6 md:px-12 bg-[#eff4ff]/20 border-y border-[#ebdccb]/40" id="agents">
-          <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-[#121c2a] mb-12">Meet Your New AI Recruiting Team</h2>
+        <section className="py-20 px-6 md:px-12 bg-secondary/20 border-b border-border/60" id="agents">
+          <div className="max-w-5xl mx-auto space-y-12">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Your Autonomous Recruitment Squad</h2>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                Specialized micro-agents handling distinct stages with dedicated system prompts and guardrails.
+              </p>
+            </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Agent 1 */}
-              <div className="bg-white p-6 rounded-2xl border border-[#dcc1b1] shadow-sm text-left">
-                <div className="w-16 h-16 rounded-full bg-[#ffdcc5]/10 mb-6 overflow-hidden border border-gray-100">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    alt="The Sourcer Avatar" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-lA0q88t2OwWm_emioipt13-pcuw4FPNUnXv486CHbAAN5ML3aob90tFJCmJ_U5zJpHypdvtZ3pkqtojChEeX96EWLiwXLovaU6n1QBPvTmW56Jf0pAA8YqC0_OylpsIVVAZvvgVHCWfduXmFoYgqnlNN7G82ecJ3r5zocMXMLRY_V92LNcO512w34I3MDTvYgOJaib1CKtmeeR949984zRiGC4DrnOb4ZGG3iHPzYZYdwNHHlBBKIfGaEvyr1c28p48ZfNdbsEk"
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="bg-card p-6 rounded-xl border border-border shadow-xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Bot className="w-5 h-5" />
                 </div>
-                <h4 className="text-lg font-bold text-[#121c2a]">The Sourcer</h4>
-                <p className="text-[#944a00] font-semibold text-xs mb-3">Active 24/7</p>
-                <p className="text-xs text-[#564337] leading-relaxed">
-                  Crawls professional networks to find passive talent that matches your ideal candidate persona perfectly.
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">The Parser Agent</h3>
+                  <span className="text-[10px] text-primary font-medium uppercase tracking-wider">Extraction & Chunking</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Extracts raw text from PDF resumes, normalizes experience timelines, and generates dense vector embeddings.
                 </p>
               </div>
 
-              {/* Agent 2 */}
-              <div className="bg-white p-6 rounded-2xl border border-[#dcc1b1] shadow-sm text-left">
-                <div className="w-16 h-16 rounded-full bg-[#ffdcc5]/10 mb-6 overflow-hidden border border-gray-100">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    alt="The Screener Avatar" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBil5l2BaUWJfVMQD2nAykMp_s6cDcR3ehHFaY9xRYAnmI2YxPHlb6H6yr9x3Hp_MDetZJRoRoFtct_DfuG_FRGgEnfV2jF4uI12bHLOicJPUpKyHsN4LdI3CgF2Yv-9xDuVk9HnjkjReeOHdJGvA5fXMr-eL-41cRpj8lrHngSB04nADUdeoitICjr7L__gzmqq-ma3r14fr22gS77W7bOQX5JXN7VLKbhgUANW96q2wfBct_X0ML_Q-uKSMLPIJcnuXwQ-1DiUnY"
-                  />
+              <div className="bg-card p-6 rounded-xl border border-border shadow-xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                  <Zap className="w-5 h-5" />
                 </div>
-                <h4 className="text-lg font-bold text-[#121c2a]">The Screener</h4>
-                <p className="text-[#944a00] font-semibold text-xs mb-3">Skills Focused</p>
-                <p className="text-xs text-[#564337] leading-relaxed">
-                  Conducts initial technical assessments and clarifies resume gaps through automated conversational interfaces.
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">The Matching Agent</h3>
+                  <span className="text-[10px] text-emerald-600 font-medium uppercase tracking-wider">Cosine Similarity</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Calculates multi-dimensional compatibility against required skills, minimum years, and organization guidelines.
                 </p>
               </div>
 
-              {/* Agent 3 */}
-              <div className="bg-white p-6 rounded-2xl border border-[#dcc1b1] shadow-sm text-left">
-                <div className="w-16 h-16 rounded-full bg-[#ffdcc5]/10 mb-6 overflow-hidden border border-gray-100">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    alt="The Concierge Avatar" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAccQzeW_Al5vP20-x2SK6RAdIBvm3tT9Sz2VMpnl5yU2jPc6E7dgkqsa9hUReDdKffzQJkMNVo40B_FAZsYz6FWpC6vx1VLoTtTbkA6FLhiz26BG-l68pB6arKpYKos2KMo4ZmjT4rhpg_QXIij0lLmFV-MEYGURYLJx819zwuZ9tMknCpKcyGeHkCfwS0HQ2NspO6ip8-21idg2X6r4Qn__V-39z8ed_Aw48za0iGC6gs7OHrPk47nurw5QNuqg2WymhaIIMQNM"
-                  />
+              <div className="bg-card p-6 rounded-xl border border-border shadow-xs space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <UserCheck className="w-5 h-5" />
                 </div>
-                <h4 className="text-lg font-bold text-[#121c2a]">The Concierge</h4>
-                <p className="text-[#944a00] font-semibold text-xs mb-3">Experience First</p>
-                <p className="text-xs text-[#564337] leading-relaxed">
-                  Maintains high candidate engagement by answering FAQs and providing interview preparation guides automatically.
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">The Orchestrator</h3>
+                  <span className="text-[10px] text-amber-600 font-medium uppercase tracking-wider">Checkpoint Gatekeeper</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Manages execution graph state, handles pause-for-approval barriers, and streams live telemetry over WebSockets.
                 </p>
               </div>
             </div>
@@ -275,184 +336,122 @@ const Home = () => {
         </section>
 
         {/* Pricing Section */}
-        <section className="py-20 px-6 md:px-12" id="pricing">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-[#121c2a]">Simple, Transparent Plans</h2>
-              <p className="text-base text-[#564337] mt-2 font-medium">No hidden seats or credit limits. Just results.</p>
+        <section className="py-20 px-6 md:px-12 border-b border-border/60" id="pricing">
+          <div className="max-w-5xl mx-auto space-y-12">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Simple, Predictable Plans</h2>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                No hidden seat taxes or per-resume metering. Everything you need to scale hiring.
+              </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-              {/* Basic */}
-              <div className="bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-[#564337] uppercase tracking-widest mb-2">Growth</h4>
-                  <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl font-extrabold text-[#121c2a]">$49</span>
-                    <span className="text-xs text-[#564337] font-medium">/month</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* Starter */}
+              <div className="bg-card p-6 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Growth</h3>
+                    <div className="flex items-baseline gap-1 mt-2">
+                      <span className="text-3xl font-bold text-foreground">$49</span>
+                      <span className="text-xs text-muted-foreground">/ month</span>
+                    </div>
                   </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      5 Active Job Slots
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Unlimited Resumes
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      AI Sourcing Agent
-                    </li>
+                  <ul className="space-y-2.5 text-xs text-muted-foreground">
+                    <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> 5 Active Job Slots</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Unlimited Resume Ingest</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Qdrant Vector Indexing</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Community Support</li>
                   </ul>
                 </div>
-                <button className="w-full py-3 border border-[#dcc1b1] rounded-xl text-sm font-semibold hover:bg-[#eff4ff] transition-colors active:scale-95">
+                <Button variant="outline" className="w-full text-xs" onClick={() => navigate('/signup')}>
                   Start Basic
-                </button>
+                </Button>
               </div>
 
               {/* Pro (Featured) */}
-              <div className="bg-white p-8 rounded-2xl border-2 border-[#944a00] shadow-md relative flex flex-col justify-between md:scale-105">
-                <div className="absolute top-0 right-6 -translate-y-1/2 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  Most Popular
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#944a00] uppercase tracking-widest mb-2 mt-2">Scale</h4>
-                  <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl font-extrabold text-[#121c2a]">$149</span>
-                    <span className="text-xs text-[#564337] font-medium">/month</span>
+              <div className="bg-card p-6 rounded-xl border-2 border-primary shadow-sm flex flex-col justify-between space-y-6 relative">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-sm font-semibold text-primary uppercase tracking-wider">Scale</h3>
+                      <div className="flex items-baseline gap-1 mt-2">
+                        <span className="text-3xl font-bold text-foreground">$149</span>
+                        <span className="text-xs text-muted-foreground">/ month</span>
+                      </div>
+                    </div>
+                    <Badge variant="default" className="text-[10px]">Popular</Badge>
                   </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      25 Active Job Slots
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Full AI Agent Team
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Slack &amp; HRIS Sync
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Advanced Analytics
-                    </li>
+                  <ul className="space-y-2.5 text-xs text-muted-foreground">
+                    <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> 25 Active Job Slots</li>
+                    <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> Full Multi-Agent Squad</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Groq + Local Ollama Engine</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Human Gatekeeper Controls</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Real-time WebSocket Telemetry</li>
                   </ul>
                 </div>
-                <button className="w-full py-3 bg-gradient-to-r from-[#E67E22] to-[#F59E0B] text-white rounded-xl text-sm font-semibold shadow-md active:scale-95 transition-transform">
-                  Get Started Now
-                </button>
+                <Button className="w-full text-xs" onClick={() => navigate('/signup')}>
+                  Start Pro Trial
+                </Button>
               </div>
 
               {/* Enterprise */}
-              <div className="bg-white p-8 rounded-2xl border border-[#dcc1b1] shadow-sm flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-[#564337] uppercase tracking-widest mb-2">Enterprise</h4>
-                  <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl font-extrabold text-[#121c2a]">Custom</span>
+              <div className="bg-card p-6 rounded-xl border border-border shadow-xs flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Enterprise</h3>
+                    <div className="flex items-baseline gap-1 mt-2">
+                      <span className="text-3xl font-bold text-foreground">Custom</span>
+                    </div>
                   </div>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Unlimited Everything
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      Dedicated Success Manager
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-[#121c2a]">
-                      <svg className="w-5 h-5 text-[#944a00]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 8 12 12 14 14" />
-                      </svg>
-                      On-premise AI training
-                    </li>
+                  <ul className="space-y-2.5 text-xs text-muted-foreground">
+                    <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> Unlimited Job Specs</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Dedicated On-Premises Ollama</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Custom Policy Vectors</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> 99.9% Uptime SLA</li>
                   </ul>
                 </div>
-                <button className="w-full py-3 border border-[#dcc1b1] rounded-xl text-sm font-semibold hover:bg-[#eff4ff] transition-colors active:scale-95">
+                <Button variant="outline" className="w-full text-xs" onClick={() => navigate('/login')}>
                   Contact Sales
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 px-6 md:px-12 mb-16">
-          <div className="max-w-7xl mx-auto bg-gradient-to-r from-[#E67E22] to-[#F59E0B] rounded-[32px] p-12 md:p-16 text-center text-white relative overflow-hidden shadow-xl">
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-              <svg height="100%" preserveAspectRatio="none" viewBox="0 0 100 100" width="100%">
-                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white"></path>
-              </svg>
-            </div>
-            <div className="relative z-10 space-y-6">
-              <h2 className="text-3xl md:text-4xl font-extrabold max-w-2xl mx-auto">Ready to hire your next star teammate?</h2>
-              <p className="text-base md:text-lg text-white/90 max-w-xl mx-auto">Join the future of recruitment. Try AgentHire AI for 14 days, no credit card required.</p>
-              <div className="flex justify-center gap-4 pt-4">
-                <button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-white text-[#944a00] hover:bg-gray-50 px-10 py-4 rounded-xl font-semibold text-base shadow-xl active:scale-95 transition-all"
-                >
-                  Start Your Free Trial
-                </button>
-              </div>
+        {/* Bottom CTA */}
+        <section className="py-20 px-6 md:px-12">
+          <div className="max-w-4xl mx-auto rounded-2xl bg-card border border-border p-8 md:p-12 text-center space-y-5 shadow-sm">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Ready to automate candidate screening?
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+              Join technical talent teams using AgentHire AI to discover qualified engineers with autonomous accuracy.
+            </p>
+            <div className="pt-2">
+              <Button size="lg" onClick={() => navigate(user ? '/dashboard' : '/signup')} className="flex items-center gap-2 mx-auto">
+                {user ? 'Open Dashboard' : 'Get Started in 60 Seconds'}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="flex flex-col md:flex-row justify-between items-center px-6 md:px-12 w-full py-8 border-t border-[#dcc1b1] bg-white mt-auto gap-6 text-sm text-[#564337]">
-        <div className="flex flex-col gap-2 items-center md:items-start">
-          <div className="flex items-center gap-2">
-            <Bot className="text-[#944a00] w-5 h-5" />
-            <span className="font-bold text-[#944a00]">AgentHire AI</span>
+      <footer className="border-t border-border py-8 px-6 md:px-12 bg-card text-xs text-muted-foreground">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 font-medium text-foreground">
+            <div className="w-6 h-6 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <span>AgentHire AI Recruitment OS</span>
           </div>
-          <p className="text-xs text-gray-500">© 2024 AgentHire AI. Human-Centric Intelligence.</p>
-        </div>
-        
-        <div className="flex gap-8">
-          <Link className="hover:underline" to="#">Privacy Policy</Link>
-          <Link className="hover:underline" to="#">Terms of Service</Link>
-          <Link className="hover:underline" to="#">Support</Link>
-        </div>
-
-        <div className="flex gap-4">
-          <button className="w-8 h-8 rounded-full border border-[#dcc1b1] flex items-center justify-center hover:text-[#944a00] transition-colors">
-            <Globe className="w-4 h-4" />
-          </button>
-          <button className="w-8 h-8 rounded-full border border-[#dcc1b1] flex items-center justify-center hover:text-[#944a00] transition-colors">
-            <Share2 className="w-4 h-4" />
-          </button>
+          <div className="flex gap-6">
+            <Link to="/login" className="hover:text-foreground transition-colors">Sign In</Link>
+            <Link to="/signup" className="hover:text-foreground transition-colors">Sign Up</Link>
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+          </div>
+          <p>© {new Date().getFullYear()} AgentHire AI. All rights reserved.</p>
         </div>
       </footer>
     </div>

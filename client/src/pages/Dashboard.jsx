@@ -36,10 +36,8 @@ import {
   Sun,
   Moon,
   Activity,
-  CheckCircle2,
   AlertCircle,
   RefreshCw,
-  ShieldCheck,
   ChevronDown
 } from 'lucide-react';
 
@@ -410,7 +408,7 @@ const Dashboard = () => {
 
   const isExpanded = sidebarOpen || sidebarHovered || sidebarPinned;
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex flex-col h-full overflow-hidden">
       <div className={cn(
         "flex items-center mb-6 transition-all duration-300 relative",
@@ -626,7 +624,7 @@ const Dashboard = () => {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       <main 
@@ -1096,7 +1094,7 @@ const Dashboard = () => {
                 ESC
               </button>
             </div>
-            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-5">
+            <div className="p-4 max-h-[60vh] overflow-y-auto no-scrollbar space-y-5">
               <div>
                 <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   {searchQuery ? 'Matching Jobs' : 'Recent Jobs'}
