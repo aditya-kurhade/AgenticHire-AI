@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import api from '../lib/api';
 import OverviewTab from '../components/dashboard/OverviewTab';
@@ -414,10 +414,10 @@ const Dashboard = () => {
         "flex items-center mb-6 transition-all duration-300 relative",
         isExpanded ? "gap-3 px-2 justify-between" : "justify-center px-0"
       )}>
-        <div className="flex items-center gap-3 min-w-0">
+        <Link to="/" className="flex items-center gap-3 min-w-0 group cursor-pointer focus:outline-none">
           <div 
-            title="AgentHire AI" 
-            className="w-10 h-10 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm cursor-pointer"
+            title="AgentHire AI - Return to Home" 
+            className="w-10 h-10 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-200"
           >
             <Sparkles className="w-5 h-5" />
           </div>
@@ -425,10 +425,10 @@ const Dashboard = () => {
             "transition-all duration-300 overflow-hidden whitespace-nowrap",
             isExpanded ? "opacity-100 max-w-[140px]" : "opacity-0 max-w-0 pointer-events-none hidden lg:block lg:opacity-0"
           )}>
-            <h1 className="font-bold text-sm tracking-tight text-foreground leading-tight">AgentHire AI</h1>
+            <h1 className="font-bold text-sm tracking-tight text-foreground leading-tight group-hover:text-primary transition-colors">AgentHire AI</h1>
             <p className="text-[11px] font-medium text-muted-foreground tracking-wide">Recruitment OS</p>
           </div>
-        </div>
+        </Link>
 
         {/* Desktop Pin/Unpin Collapse Toggle */}
         {isExpanded && (
