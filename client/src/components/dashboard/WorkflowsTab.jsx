@@ -2,8 +2,10 @@ import { PageHeader } from '../ui/PageHeader';
 import { Badge } from '../ui/Badge';
 import { EmptyState } from '../ui/EmptyState';
 import { Button } from '../ui/Button';
+import { GitHubScoreTooltip } from './GitHubScoreTooltip';
 import {
   GitFork,
+  Code2,
   Database,
   FileText,
   GitCompare,
@@ -24,6 +26,7 @@ const STEP_ICONS = {
   resume_parser: FileText,
   embedding_agent: Database,
   matching_agent: GitCompare,
+  github_mcp: Code2,
   shortlisting_agent: CheckSquare,
   human_approval: UserCheck,
   interview_agent: MessageSquare,
@@ -105,9 +108,19 @@ export default function WorkflowsTab({
                     <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded truncate max-w-[120px] text-muted-foreground">
                       {c.job_id?.title || 'Applicant'}
                     </span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider shrink-0 text-foreground tabular-nums">
-                      {c.match_score != null ? `${c.match_score}%` : c.status}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {c.match_score != null && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-primary tabular-nums">
+                          {c.match_score}%
+                        </span>
+                      )}
+                      {c.coding_score != null && (
+                        <span className="text-[10px] font-bold text-foreground bg-secondary border border-border px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums" title="GitHub MCP Practical Coding Score">
+                          <svg className="w-2.5 h-2.5 fill-foreground shrink-0" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                          <span>{c.coding_score}%</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -125,10 +138,15 @@ export default function WorkflowsTab({
 
               <div className="relative bg-secondary/30 rounded-xl p-4 border border-border flex flex-col gap-3">
                 {[
-                  { key: 'resume_parser', title: 'Resume Parser', desc: 'PDF text extraction' },
-                  { key: 'embedding_agent', title: 'Embedding Agent', desc: 'Vector ingest' },
-                  { key: 'matching_agent', title: 'Matching Agent', desc: 'RAG compatibility' },
-                  { key: 'shortlisting_agent', title: 'Shortlisting Agent', desc: 'Threshold check' },
+                  { key: 'resume_parser', title: 'Resume Parser', desc: 'PDF text & URL extraction' },
+                  { key: 'embedding_agent', title: 'Embedding Agent', desc: 'Vector ingest (Qdrant)' },
+                  { 
+                    key: 'matching_agent', 
+                    title: 'Matching Agent', 
+                    desc: 'RAG policy & resume alignment',
+                    hasBranch: true
+                  },
+                  { key: 'shortlisting_agent', title: 'Shortlisting Agent', desc: 'Threshold evaluation' },
                   { key: 'human_approval', title: 'Human Approval', desc: 'Manual review' },
                   { key: 'interview_agent', title: 'Interview Agent', desc: 'Tech assessment' },
                   { key: 'email_agent', title: 'Email Agent', desc: 'Notifications' }
@@ -164,21 +182,69 @@ export default function WorkflowsTab({
                     }
                   }
 
+                  const selectedCandidate = candidates.find(c => c._id === selectedCandidateId);
+                  const isMatchingNode = step.key === 'matching_agent';
+                  const showGitHubBranch = isMatchingNode && (selectedCandidate?.coding_score != null || selectedCandidate?.github_username);
+
                   return (
-                    <div key={step.key} className="relative flex items-center gap-3">
-                      {idx < arr.length - 1 && (
-                        <div className="absolute left-5 top-11 w-0.5 h-4 bg-border" />
-                      )}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border shadow-xs shrink-0 z-[1] ${iconColor}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className={`flex-1 border px-3.5 py-2.5 rounded-lg shadow-xs transition-all flex items-center justify-between gap-2 ${stateColor}`}>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-semibold truncate text-foreground">{step.title}</span>
-                          <span className="text-[10px] text-muted-foreground">{step.desc}</span>
+                    <div key={step.key} className="relative flex flex-col gap-2">
+                      <div className="relative flex items-center gap-3">
+                        {idx < arr.length - 1 && (
+                          <div className={`absolute left-5 ${showGitHubBranch ? 'top-14 h-16' : 'top-11 h-4'} w-0.5 bg-border`} />
+                        )}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border shadow-xs shrink-0 z-[1] ${iconColor}`}>
+                          <Icon className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider shrink-0">{badge}</span>
+                        <div className={`flex-1 border px-3.5 py-2.5 rounded-lg shadow-xs transition-all flex items-center justify-between gap-2 ${stateColor}`}>
+                          <div className="min-w-0">
+                            <span className="block text-xs font-semibold truncate text-foreground">{step.title}</span>
+                            <span className="text-[10px] text-muted-foreground">{step.desc}</span>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider shrink-0">{badge}</span>
+                        </div>
                       </div>
+
+                      {/* Polished Professional GitHub MCP Card with Hover Breakdown */}
+                      {showGitHubBranch && (
+                        <div className="relative group ml-12 mr-1 my-1.5 p-3 rounded-xl border border-border bg-card shadow-xs hover:border-primary/40 hover:bg-accent/30 transition-all cursor-help">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0 shadow-xs">
+                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                                </svg>
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-foreground tracking-tight">GitHub MCP Protocol</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5 truncate">
+                                  <span className="font-medium text-foreground">@{selectedCandidate.github_username || 'candidate'}</span>
+                                  <span>&bull;</span>
+                                  <span>Empirical Code Verification</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-sm font-bold text-foreground tabular-nums">
+                                {selectedCandidate.coding_score != null ? `${selectedCandidate.coding_score}%` : '—'}
+                              </div>
+                              <span className="text-[9px] uppercase font-semibold text-muted-foreground tracking-wider block">
+                                Coding Score
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Hover Tooltip Breakdown */}
+                          <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block z-50 pointer-events-none transition-opacity duration-150 animate-in fade-in zoom-in-95">
+                            <GitHubScoreTooltip
+                              codingScore={selectedCandidate.coding_score}
+                              username={selectedCandidate.github_username}
+                              metrics={selectedCandidate.github_metrics}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

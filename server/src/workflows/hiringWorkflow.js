@@ -14,6 +14,7 @@ const MatchingAgent = require('../agents/matchingAgent');
 const ShortlistingAgent = require('../agents/shortlistingAgent');
 const InterviewAgent = require('../agents/interviewAgent');
 const EmailAgent = require('../agents/emailAgent');
+const githubMcpConnector = require('../mcp/githubMcp/githubMcpConnector');
 
 class HiringWorkflowEngine {
   /**
@@ -196,12 +197,38 @@ class HiringWorkflowEngine {
           candidate.match_score = result.data.match_score;
           candidate.matched_skills = result.data.matched_required_skills;
           candidate.missing_skills = result.data.missing_skills;
+
+          // MCP GITHUB CODE SCORING (Independent Empirical Verification)
+          const githubHandle = candidate.github_url || candidate.github_username;
+          if (githubHandle) {
+            try {
+              console.log(`🐙 [Workflow ${workflow._id}] Triggering GitHub MCP Tool for candidate '${candidate.name}' (Target: ${githubHandle})...`);
+              const githubAnalysis = await githubMcpConnector.analyzeDeveloperProfile(
+                githubHandle,
+                job.required_skills || [],
+                job.preferred_skills || []
+              );
+
+              if (githubAnalysis && githubAnalysis.coding_score !== null) {
+                candidate.coding_score = githubAnalysis.coding_score;
+                candidate.github_username = githubAnalysis.username || candidate.github_username || githubHandle;
+                candidate.github_metrics = githubAnalysis;
+                console.log(`💻 [Workflow ${workflow._id}] GitHub MCP Evaluation Complete: Coding Score = ${candidate.coding_score}%`);
+              }
+            } catch (ghErr) {
+              console.warn(`⚠️ [Workflow ${workflow._id}] GitHub MCP Evaluation non-fatal error:`, ghErr.message);
+            }
+          }
+
           await candidate.save();
 
           console.log('\n======================================================');
-          console.log('🎯 [Agent 3: Matching Agent] COMPLETED WORK');
+          console.log('🎯 [Agent 3: Matching Agent & MCP GitHub] COMPLETED WORK');
           console.log('------------------------------------------------------');
-          console.log(`🎯 Match Score    : ${result.data.match_score}%`);
+          console.log(`🎯 Match Score    : ${result.data.match_score}% (RAG Resume Alignment)`);
+          if (candidate.coding_score !== null && candidate.coding_score !== undefined) {
+            console.log(`💻 Coding Score   : ${candidate.coding_score}% (Empirical GitHub Verification)`);
+          }
           console.log(`✅ Matched Skills : ${JSON.stringify(result.data.matched_required_skills || [])}`);
           console.log(`❌ Missing Skills : ${JSON.stringify(result.data.missing_skills || [])}`);
           console.log(`💡 Recommendation : ${result.data.recommendation || 'N/A'}`);

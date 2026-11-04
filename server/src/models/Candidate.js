@@ -16,6 +16,11 @@ const CandidateSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  github_url: {
+    type: String,
+    trim: true,
+    default: null
+  },
   resume_url: {
     type: String
   },
@@ -30,6 +35,20 @@ const CandidateSchema = new mongoose.Schema({
   },
   match_score: {
     type: Number,
+    default: null
+  },
+  // Dual-Score Architecture (MCP GitHub)
+  coding_score: {
+    type: Number,
+    default: null
+  },
+  github_username: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  github_metrics: {
+    type: mongoose.Schema.Types.Mixed,
     default: null
   },
   status: {

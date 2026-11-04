@@ -12,6 +12,7 @@ const ApplyJob = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [githubUrl, setGithubUrl] = useState('');
   const [resume, setResume] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -59,6 +60,7 @@ const ApplyJob = () => {
     formData.append('name', name);
     formData.append('email', email);
     formData.append('phone', phone);
+    formData.append('github_url', githubUrl);
     formData.append('jobId', jobId);
     formData.append('resume', resume);
 
@@ -192,6 +194,19 @@ const ApplyJob = () => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground" htmlFor="githubUrl">GitHub Profile URL (For MCP Practical Coding Score)</label>
+              <input 
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all font-mono text-xs" 
+                id="githubUrl" 
+                placeholder="https://github.com/your-username" 
+                type="url"
+                value={githubUrl}
+                onChange={(e) => setGithubUrl(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Optional: Used by our GitHub MCP Agent to verify your public repositories & empirical code contributions.</p>
             </div>
 
             <div className="space-y-1">
