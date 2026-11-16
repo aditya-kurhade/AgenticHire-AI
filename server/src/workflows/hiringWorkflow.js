@@ -16,7 +16,27 @@ const InterviewAgent = require('../agents/interviewAgent');
 const EmailAgent = require('../agents/emailAgent');
 const githubMcpConnector = require('../mcp/githubMcp/githubMcpConnector');
 
+// Global workflow automation settings state (can be changed dynamically from dashboard toggle)
+let globalWorkflowConfig = {
+  autoApprovalEnabled: process.env.AUTO_APPROVAL_ENABLED === 'true' || false,
+  autoApprovalThreshold: Number(process.env.AUTO_APPROVAL_THRESHOLD) || 80
+};
+
 class HiringWorkflowEngine {
+  static getAutomationConfig() {
+    return { ...globalWorkflowConfig };
+  }
+
+  static setAutomationConfig(newConfig) {
+    if (typeof newConfig.autoApprovalEnabled === 'boolean') {
+      globalWorkflowConfig.autoApprovalEnabled = newConfig.autoApprovalEnabled;
+    }
+    if (typeof newConfig.autoApprovalThreshold === 'number') {
+      globalWorkflowConfig.autoApprovalThreshold = newConfig.autoApprovalThreshold;
+    }
+    console.log('🤖 [WorkflowEngine] Updated Automation Config:', globalWorkflowConfig);
+    return { ...globalWorkflowConfig };
+  }
   /**
    * Helper function to execute an agent function with retry logic.
    */
@@ -256,6 +276,43 @@ class HiringWorkflowEngine {
         }
 
         else if (node === 'human_approval') {
+          // Check Auto-Approval Condition: If enabled & candidate score >= threshold
+          const threshold = globalWorkflowConfig.autoApprovalThreshold || 80;
+          const candidateScore = candidate.match_score ?? 0;
+          const shouldAutoApprove = globalWorkflowConfig.autoApprovalEnabled && candidateScore >= threshold;
+
+          if (shouldAutoApprove) {
+            console.log('\n======================================================');
+            console.log('⚡ [AUTO-APPROVAL TRIGGERED] THRESHOLD MET');
+            console.log('------------------------------------------------------');
+            console.log(`👤 Candidate : ${candidate.name || 'Candidate'}`);
+            console.log(`📈 Score     : ${candidateScore}% (Threshold: >= ${threshold}%)`);
+            console.log(`🤖 Action    : Auto-approved by system rule. Skipping manual pause...`);
+            console.log('======================================================\n');
+
+            // Log auto-approval action
+            await WorkflowLog.create({
+              workflow_id: workflow._id,
+              agent_name: 'human_approval',
+              input: { autoApproved: true, score: candidateScore, threshold },
+              output: { success: true, decision: 'approve', mode: 'auto' },
+              status: 'success'
+            });
+
+            candidate.status = 'shortlist';
+            await candidate.save();
+
+            broadcast('workflow:auto_approved', {
+              workflowId: String(workflow._id),
+              candidateId: String(candidate._id),
+              score: candidateScore,
+              threshold
+            });
+
+            // Continue directly without pausing
+            continue;
+          }
+
           // PAUSE WORKFLOW: interrupt execution to wait for recruiter approval
           console.log('\n======================================================');
           console.log('⏸️ [HUMAN-IN-THE-LOOP CHECKPOINT] WORKFLOW PAUSED');
@@ -393,6 +450,17 @@ class HiringWorkflowEngine {
       candidate.status = 'reject';
       await candidate.save();
       
+      // Explicitly log that interview_agent is skipped due to human rejection
+      await WorkflowLog.create({
+        workflow_id: workflow._id,
+        agent_name: 'interview_agent',
+        input: { reason: 'Candidate rejected during human review stage' },
+        output: { skipped: true, note: 'Assessment bypassed for rejected candidate' },
+        status: 'skipped'
+      });
+
+      console.log('⏭️ [InterviewAgent] SKIPPED: Candidate rejected at human approval stage.');
+      
       // If rejected, skip straight to email_agent to notify rejection
       workflow.current_state = 'email_agent';
       await workflow.save();
@@ -409,6 +477,50 @@ class HiringWorkflowEngine {
 
     // Trigger execution loop
     return await this.execute(workflow._id);
+  }
+
+  /**
+   * Re-triggers an entire workflow from the beginning for a given candidate.
+   * Cleans up prior logs or resets candidate fields to ensure fresh screening.
+   */
+  static async retrigger(candidateId) {
+    const candidate = await Candidate.findById(candidateId);
+    if (!candidate) throw new Error('Candidate not found.');
+
+    let workflow = await Workflow.findOne({ candidate_id: candidate._id });
+    if (!workflow) {
+      workflow = await Workflow.create({
+        candidate_id: candidate._id,
+        job_id: candidate.job_id,
+        current_state: 'resume_parser',
+        status: 'running'
+      });
+    } else {
+      // Clear past logs for clean fresh run
+      await WorkflowLog.deleteMany({ workflow_id: workflow._id });
+      workflow.current_state = 'resume_parser';
+      workflow.status = 'running';
+      await workflow.save();
+    }
+
+    // Reset candidate transient evaluation metrics
+    candidate.status = 'pending';
+    candidate.interview_rubric = '';
+    await candidate.save();
+
+    console.log(`\n🔄 [Workflow ${workflow._id}] Pipeline Re-trigger Requested for ${candidate.name}`);
+    broadcast('workflow:retrigger', {
+      workflowId: String(workflow._id),
+      candidateId: String(candidate._id),
+      status: 'running'
+    });
+
+    // Execute asynchronously
+    this.execute(workflow._id).catch(err => {
+      console.error(`Background retrigger error for candidate ${candidate._id}:`, err.message);
+    });
+
+    return workflow;
   }
 }
 

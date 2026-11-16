@@ -42,6 +42,7 @@
     --radius: 0.625rem;             /* 10px modern soft radius */
 
     /* Sidebar specifics */
+    --sidebar-current-width: 4.5rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 239 84% 67%;

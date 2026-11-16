@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const {
   getWorkflowSettings,
+  updateWorkflowAutomationSettings,
   getWorkflowLLMSettings,
   updateWorkflowLLMSettings,
   getWorkflowByCandidateId,
@@ -13,9 +14,14 @@ const {
 } = require('../controllers/workflowController');
 
 // @route   GET /api/workflow/settings
-// @desc    Get system workflow settings (e.g. node colors)
+// @desc    Get system workflow settings (e.g. node colors and automation settings)
 // @access  Private (Recruiter only)
 router.get('/settings', protect, getWorkflowSettings);
+
+// @route   POST /api/workflow/automation-settings
+// @desc    Update auto-approval automation toggle and threshold
+// @access  Private (Recruiter only)
+router.post('/automation-settings', protect, updateWorkflowAutomationSettings);
 
 // @route   GET /api/workflow/llm-settings
 // @desc    Get LLM configuration and Ollama connectivity

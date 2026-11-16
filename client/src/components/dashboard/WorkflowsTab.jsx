@@ -1,8 +1,12 @@
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import api from '../../lib/api';
 import { PageHeader } from '../ui/PageHeader';
 import { Badge } from '../ui/Badge';
 import { EmptyState } from '../ui/EmptyState';
 import { Button } from '../ui/Button';
 import { GitHubScoreTooltip } from './GitHubScoreTooltip';
+import { InterviewModal } from './InterviewModal';
 import {
   GitFork,
   Code2,
@@ -19,7 +23,12 @@ import {
   AlertCircle,
   Play,
   Terminal,
-  Clock
+  Clock,
+  FastForward,
+  Slash,
+  Eye,
+  FileQuestion,
+  Zap
 } from 'lucide-react';
 
 const STEP_ICONS = {
@@ -45,6 +54,77 @@ export default function WorkflowsTab({
   llmSettings,
   nodeColorsSpec
 }) {
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [autoApproval, setAutoApproval] = useState({ enabled: false, threshold: 80 });
+  const [autoApprovalUpdating, setAutoApprovalUpdating] = useState(false);
+  const [isRetriggering, setIsRetriggering] = useState(false);
+
+  const handleRetriggerCurrent = async () => {
+    if (!selectedCandidateId) return;
+    setIsRetriggering(true);
+    try {
+      await api.post('/candidates/batch-retrigger', {
+        candidateIds: [selectedCandidateId]
+      });
+      toast.success('Pipeline re-triggered from Step 1!');
+    } catch (err) {
+      console.error('Failed to re-trigger workflow:', err);
+      toast.error(err.response?.data?.error || 'Failed to re-trigger workflow');
+    } finally {
+      setIsRetriggering(false);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch initial workflow automation settings
+    api.get('/workflow/settings')
+      .then(res => {
+        const auto = res.data?.data?.automation;
+        if (auto) {
+          setAutoApproval({
+            enabled: !!auto.autoApprovalEnabled,
+            threshold: auto.autoApprovalThreshold || 80
+          });
+        }
+      })
+      .catch(err => console.error('Failed to load automation settings:', err));
+  }, []);
+
+  const handleToggleAutoApproval = async () => {
+    const nextEnabled = !autoApproval.enabled;
+    setAutoApprovalUpdating(true);
+    try {
+      await api.post('/workflow/automation-settings', {
+        autoApprovalEnabled: nextEnabled,
+        autoApprovalThreshold: autoApproval.threshold
+      });
+      setAutoApproval(prev => ({ ...prev, enabled: nextEnabled }));
+      toast.success(
+        nextEnabled
+          ? `Auto-approval enabled (Scores >= ${autoApproval.threshold}% bypass pause)`
+          : 'Auto-approval disabled (All candidates pause at Human Review)'
+      );
+    } catch (err) {
+      console.error('Failed to toggle auto approval:', err);
+      toast.error('Failed to update auto approval settings');
+    } finally {
+      setAutoApprovalUpdating(false);
+    }
+  };
+
+  const handleUpdateThreshold = async (newVal) => {
+    const val = Number(newVal);
+    setAutoApproval(prev => ({ ...prev, threshold: val }));
+    try {
+      await api.post('/workflow/automation-settings', {
+        autoApprovalEnabled: autoApproval.enabled,
+        autoApprovalThreshold: val
+      });
+    } catch (err) {
+      console.error('Failed to update threshold:', err);
+    }
+  };
+
   const statusLabel = selectedWorkflow
     ? selectedWorkflow.status.replace(/_/g, ' ')
     : 'No workflow';
@@ -57,7 +137,38 @@ export default function WorkflowsTab({
         icon={GitFork}
         description="Monitor pipeline execution, checkpoints, and human review points."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Auto-Approval Rule Control Pill */}
+            <div className="bg-card border border-border px-3 py-1.5 rounded-lg shadow-xs flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5">
+                <Zap className={`w-3.5 h-3.5 ${autoApproval.enabled ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} />
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-semibold text-muted-foreground block leading-tight">
+                    Auto-Approval
+                  </span>
+                  <span className="text-xs font-semibold text-foreground">
+                    {autoApproval.enabled ? `≥ ${autoApproval.threshold}% Match` : 'Manual Review'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={autoApprovalUpdating}
+                onClick={handleToggleAutoApproval}
+                aria-label="Toggle auto approval"
+                className={`w-9 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${
+                  autoApproval.enabled ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform shadow-xs ${
+                    autoApproval.enabled ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
             <div className="bg-card border border-border px-3 py-1.5 rounded-lg shadow-xs">
               <span className="text-[10px] uppercase font-semibold text-muted-foreground block leading-tight">Workflow Status</span>
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -158,7 +269,19 @@ export default function WorkflowsTab({
                   let badge = 'Pending';
                   let iconColor = 'bg-secondary text-muted-foreground border-border';
 
-                  if (selectedWorkflow) {
+                  const selectedCandidate = candidates.find(c => c._id === selectedCandidateId);
+                  const isCandidateRejected = selectedCandidate?.status === 'reject';
+                  const isInterviewAgentSkipped = step.key === 'interview_agent' && isCandidateRejected && selectedWorkflow && (
+                    selectedWorkflow.current_state === 'email_agent' ||
+                    selectedWorkflow.status === 'success' ||
+                    workflowLogs.some(l => l.agent_name === 'interview_agent' && (l.status === 'skipped' || l.output?.skipped))
+                  );
+
+                  if (isInterviewAgentSkipped) {
+                    stateColor = 'bg-muted/40 border-dashed border-border/80 text-muted-foreground opacity-60 line-through-none';
+                    iconColor = 'bg-muted text-muted-foreground/70 border-border/80';
+                    badge = 'Skipped';
+                  } else if (selectedWorkflow) {
                     const sequence = arr.map(a => a.key);
                     const currentIdx = sequence.indexOf(selectedWorkflow.current_state);
                     const nodeIdx = sequence.indexOf(step.key);
@@ -184,7 +307,6 @@ export default function WorkflowsTab({
                     }
                   }
 
-                  const selectedCandidate = candidates.find(c => c._id === selectedCandidateId);
                   const isMatchingNode = step.key === 'matching_agent';
                   const showGitHubBranch = isMatchingNode && (selectedCandidate?.coding_score != null || selectedCandidate?.github_username);
 
@@ -199,12 +321,50 @@ export default function WorkflowsTab({
                         </div>
                         <div className={`flex-1 border px-3.5 py-2.5 rounded-lg shadow-xs transition-all flex items-center justify-between gap-2 ${stateColor}`}>
                           <div className="min-w-0">
-                            <span className="block text-xs font-semibold truncate text-foreground">{step.title}</span>
-                            <span className="text-[10px] text-muted-foreground">{step.desc}</span>
+                            <span className={`block text-xs font-semibold truncate ${isInterviewAgentSkipped ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                              {step.title}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {isInterviewAgentSkipped ? 'Bypassed (candidate rejected at human review)' : step.desc}
+                            </span>
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider shrink-0">{badge}</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider shrink-0 ${isInterviewAgentSkipped ? 'bg-muted px-2 py-0.5 rounded text-muted-foreground' : ''}`}>
+                            {badge}
+                          </span>
                         </div>
                       </div>
+
+                      {/* Standalone Sub-Card for Interview Rubric Output */}
+                      {step.key === 'interview_agent' && !isInterviewAgentSkipped && (badge === 'Done' || selectedCandidate?.interview_rubric) && (
+                        <div className="ml-12 mr-1 my-1 p-3 rounded-xl border border-border bg-card shadow-xs flex items-center justify-between gap-3 hover:border-primary/40 transition-all">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 shadow-2xs">
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-xs font-semibold text-foreground tracking-tight block">
+                                Technical Assessment & Rubric
+                              </span>
+                              <span className="text-[11px] text-muted-foreground truncate block">
+                                AI-synthesized role questions & scoring criteria
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsInterviewModalOpen(true);
+                            }}
+                            className="h-7 px-3 text-xs flex items-center gap-1.5 shrink-0"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-primary" />
+                            <span>View Rubric</span>
+                          </Button>
+                        </div>
+                      )}
 
                       {/* Polished Professional GitHub MCP Card with Hover Breakdown */}
                       {showGitHubBranch && (
@@ -257,10 +417,29 @@ export default function WorkflowsTab({
           <div className="lg:col-span-3 space-y-5">
             {selectedWorkflow && (
               <div className="bg-card border border-border rounded-xl p-4 shadow-xs">
-                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  Actions
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Actions
+                  </h3>
+                  {selectedWorkflow && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isRetriggering || selectedWorkflow.status === 'running'}
+                      onClick={handleRetriggerCurrent}
+                      className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+                      title="Re-run the entire pipeline from Step 1"
+                    >
+                      {isRetriggering ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <RotateCw className="w-3.5 h-3.5 text-primary" />
+                      )}
+                      <span>Re-run</span>
+                    </Button>
+                  )}
+                </div>
 
                 {selectedWorkflow.status === 'paused_approval' && (
                   <div className="space-y-3">
@@ -300,10 +479,25 @@ export default function WorkflowsTab({
                 )}
 
                 {selectedWorkflow.status === 'success' && (
-                  <p className="text-xs text-emerald-600 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    Workflow completed successfully.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-xs text-emerald-600 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 font-medium flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      Workflow completed successfully.
+                    </p>
+                    <Button
+                      variant="outline"
+                      disabled={isRetriggering}
+                      onClick={handleRetriggerCurrent}
+                      className="w-full flex items-center justify-center gap-1.5 text-xs h-8 hover:bg-accent cursor-pointer"
+                    >
+                      {isRetriggering ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <RotateCw className="w-3.5 h-3.5 text-primary" />
+                      )}
+                      <span>Re-run Full Pipeline</span>
+                    </Button>
+                  </div>
                 )}
 
                 {selectedWorkflow.status === 'running' && (
@@ -330,7 +524,11 @@ export default function WorkflowsTab({
                     <div key={log._id || idx} className="border-b border-slate-800/80 pb-2">
                       <div className="flex justify-between items-center text-[10px] opacity-75">
                         <span className="text-amber-400 font-semibold">{log.agent_name?.toUpperCase()}</span>
-                        <span className={log.status === 'success' ? 'text-emerald-400' : 'text-red-400 font-semibold'}>
+                        <span className={
+                          log.status === 'success' ? 'text-emerald-400' :
+                          log.status === 'skipped' ? 'text-slate-400 font-semibold' :
+                          'text-red-400 font-semibold'
+                        }>
                           {log.status?.toUpperCase()}
                         </span>
                       </div>
@@ -357,6 +555,12 @@ export default function WorkflowsTab({
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/60">
+                  <span className="text-muted-foreground">Auto-Approval</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded ${autoApproval.enabled ? 'bg-amber-500/10 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                    {autoApproval.enabled ? `Active (≥${autoApproval.threshold}%)` : 'Disabled'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/60">
                   <span className="text-muted-foreground">Persistence</span>
                   <span className="font-medium bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded">MongoDB</span>
                 </div>
@@ -369,6 +573,14 @@ export default function WorkflowsTab({
           </div>
         </div>
       )}
+
+      {/* Candidate Interview Rubric & Questions Modal */}
+      <InterviewModal
+        isOpen={isInterviewModalOpen}
+        onClose={() => setIsInterviewModalOpen(false)}
+        candidate={candidates.find(c => c._id === selectedCandidateId)}
+        jobTitle={candidates.find(c => c._id === selectedCandidateId)?.job_id?.title}
+      />
     </div>
   );
 }

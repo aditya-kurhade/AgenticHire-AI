@@ -1,10 +1,13 @@
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
+import api from '../../lib/api';
 import { PageHeader } from '../ui/PageHeader';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { GitHubScoreTooltip } from './GitHubScoreTooltip';
+import { InterviewModal } from './InterviewModal';
 import {
   Search,
   Upload,
@@ -13,7 +16,16 @@ import {
   GitBranch,
   Zap,
   Users,
-  RotateCcw
+  RotateCcw,
+  MessageSquare,
+  CheckSquare,
+  Square,
+  Play,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 
 const CandidatesTab = ({
@@ -28,19 +40,81 @@ const CandidatesTab = ({
   candidateMinMatch,
   setCandidateMinMatch,
   setSelectedCandidateId,
-  openDashboardTab
+  openDashboardTab,
+  refreshCandidates
 }) => {
-  const filteredCandidates = candidates.filter(c => {
-    const matchesSearch = !candidateSearchQuery ||
-      c.name?.toLowerCase().includes(candidateSearchQuery.toLowerCase()) ||
-      c.email?.toLowerCase().includes(candidateSearchQuery.toLowerCase());
-    const matchesStatus = candidateStatusFilter === 'all' || c.status === candidateStatusFilter;
-    const matchesScore = candidateMinMatch === 0 || (c.match_score !== null && c.match_score >= candidateMinMatch);
-    return matchesSearch && matchesStatus && matchesScore;
-  });
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [batchActionLoading, setBatchActionLoading] = useState(false);
 
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter(c => {
+      const matchesSearch = !candidateSearchQuery ||
+        c.name?.toLowerCase().includes(candidateSearchQuery.toLowerCase()) ||
+        c.email?.toLowerCase().includes(candidateSearchQuery.toLowerCase());
+      const matchesStatus = candidateStatusFilter === 'all' || c.status === candidateStatusFilter;
+      const matchesScore = candidateMinMatch === 0 || (c.match_score !== null && c.match_score >= candidateMinMatch);
+      return matchesSearch && matchesStatus && matchesScore;
+    });
+  }, [candidates, candidateSearchQuery, candidateStatusFilter, candidateMinMatch]);
+
+  const [selectedInterviewCandidate, setSelectedInterviewCandidate] = useState(null);
   const shortlisted = candidates.filter(c => c.status === 'shortlist').length;
   const passRate = candidates.length > 0 ? Math.round((shortlisted / candidates.length) * 100) : 0;
+
+  // Multi-selection helpers
+  const allFilteredSelected = filteredCandidates.length > 0 && filteredCandidates.every(c => selectedIds.includes(c._id));
+  const someFilteredSelected = filteredCandidates.some(c => selectedIds.includes(c._id)) && !allFilteredSelected;
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredCandidates.map(c => c._id));
+    }
+  };
+
+  const toggleSelectOne = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBatchStatus = async (status) => {
+    if (selectedIds.length === 0) return;
+    setBatchActionLoading(true);
+    try {
+      const res = await api.post('/candidates/batch-status', {
+        candidateIds: selectedIds,
+        status
+      });
+      toast.success(res.data.message || `Candidates marked as ${status}`);
+      setSelectedIds([]);
+      refreshCandidates?.();
+    } catch (err) {
+      console.error('Batch status error:', err);
+      toast.error(err.response?.data?.error || 'Failed to update candidates');
+    } finally {
+      setBatchActionLoading(false);
+    }
+  };
+
+  const handleBatchRetrigger = async () => {
+    if (selectedIds.length === 0) return;
+    setBatchActionLoading(true);
+    try {
+      const res = await api.post('/candidates/batch-retrigger', {
+        candidateIds: selectedIds
+      });
+      toast.success(res.data.message || 'Workflow re-triggered for selected candidates!');
+      setSelectedIds([]);
+      refreshCandidates?.();
+    } catch (err) {
+      console.error('Batch retrigger error:', err);
+      toast.error(err.response?.data?.error || 'Failed to re-trigger workflows');
+    } finally {
+      setBatchActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -144,6 +218,18 @@ const CandidatesTab = ({
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-secondary/40 border-b border-border">
+                <th className="w-10 px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    ref={el => {
+                      if (el) el.indeterminate = someFilteredSelected;
+                    }}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all candidates"
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                  />
+                </th>
                 <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Candidate</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</th>
                 <th className="px-5 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Match</th>
@@ -155,7 +241,7 @@ const CandidatesTab = ({
             <tbody className="divide-y divide-border/60">
               {filteredCandidates.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8">
+                  <td colSpan="7" className="px-6 py-8">
                     <EmptyState
                       icon={Users}
                       title={candidates.length === 0 ? 'No candidates yet' : 'No matches for filters'}
@@ -167,8 +253,24 @@ const CandidatesTab = ({
                   </td>
                 </tr>
               ) : (
-                filteredCandidates.map((c) => (
-                  <tr key={c._id} className="hover:bg-accent/40 transition-colors relative hover:z-20">
+                filteredCandidates.map((c) => {
+                  const isSelected = selectedIds.includes(c._id);
+                  return (
+                  <tr
+                    key={c._id}
+                    className={`transition-colors relative hover:z-20 ${
+                      isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-accent/40'
+                    }`}
+                  >
+                    <td className="w-10 px-4 py-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectOne(c._id)}
+                        aria-label={`Select ${c.name}`}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                      />
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg border border-border bg-secondary flex items-center justify-center font-semibold text-foreground text-xs shrink-0">
@@ -230,6 +332,16 @@ const CandidatesTab = ({
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex justify-end gap-1.5 items-center">
+                        {c.interview_rubric && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedInterviewCandidate(c)}
+                            title="View interview assessment & rubric"
+                            className="p-1.5 rounded-lg border border-border hover:border-primary/40 hover:bg-accent text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                          >
+                            <MessageSquare className="w-4 h-4 text-primary" />
+                          </button>
+                        )}
                         {c.resume_url && (
                           <a
                             href={`http://localhost:5000${c.resume_url}`}
@@ -256,10 +368,11 @@ const CandidatesTab = ({
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
-          </table>
+            </table>
         </div>
         <div className="px-5 py-3 bg-secondary/30 flex items-center justify-between border-t border-border">
           <span className="text-xs font-medium text-muted-foreground">
@@ -277,10 +390,24 @@ const CandidatesTab = ({
             description="Adjust filters or share a job portal link."
           />
         ) : (
-          filteredCandidates.map((c) => (
-            <div key={c._id} className="bg-card border border-border rounded-xl p-4 shadow-xs">
+          filteredCandidates.map((c) => {
+            const isSelected = selectedIds.includes(c._id);
+            return (
+            <div
+              key={c._id}
+              className={`bg-card border rounded-xl p-4 shadow-xs transition-colors ${
+                isSelected ? 'border-primary/50 bg-primary/5' : 'border-border'
+              }`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelectOne(c._id)}
+                    aria-label={`Select ${c.name}`}
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary shrink-0"
+                  />
                   <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center font-semibold text-foreground text-xs shrink-0">
                     {c.name?.charAt(0)?.toUpperCase() || 'C'}
                   </div>
@@ -293,22 +420,43 @@ const CandidatesTab = ({
                 <Badge status={c.status}>{c.status}</Badge>
               </div>
               <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
-                <span className="text-xs font-bold text-primary tabular-nums">
-                  Match: {c.match_score != null ? `${c.match_score}%` : '—'}
-                </span>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setSelectedCandidateId(c._id);
-                    openDashboardTab('workflows');
-                  }}
-                >
-                  Inspect
-                </Button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-primary tabular-nums">
+                    Match: {c.match_score != null ? `${c.match_score}%` : '—'}
+                  </span>
+                  {c.coding_score != null && (
+                    <span className="text-[11px] font-semibold text-foreground tabular-nums">
+                      Code: {c.coding_score}%
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {c.interview_rubric && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setSelectedInterviewCandidate(c)}
+                    >
+                      Questions
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setSelectedCandidateId(c._id);
+                      openDashboardTab('workflows');
+                    }}
+                  >
+                    Inspect
+                  </Button>
+                </div>
               </div>
             </div>
-          ))
+          );
+        })
         )}
       </div>
 
@@ -335,6 +483,75 @@ const CandidatesTab = ({
           </div>
         </div>
       </div>
+
+      {/* Linear / Notion Style Floating Bottom Action Dock */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-5 duration-200">
+          <div className="flex items-center gap-2 sm:gap-3 bg-zinc-900/90 dark:bg-zinc-900/95 text-zinc-100 backdrop-blur-md px-3.5 py-2.5 rounded-full border border-zinc-700/60 shadow-2xl ring-1 ring-black/20">
+            {/* Selection Counter Pill */}
+            <div className="flex items-center gap-2 pl-1 pr-2 border-r border-zinc-700/80">
+              <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground font-bold text-[11px] flex items-center justify-center tabular-nums shadow-xs">
+                {selectedIds.length}
+              </span>
+              <span className="text-xs font-medium text-zinc-300 hidden sm:inline">
+                Selected
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="text-[11px] text-zinc-400 hover:text-white transition-colors underline-offset-2 hover:underline ml-0.5 cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                disabled={batchActionLoading}
+                onClick={() => handleBatchStatus('shortlist')}
+                className="h-7 px-2.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Shortlist</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={batchActionLoading}
+                onClick={() => handleBatchStatus('reject')}
+                className="h-7 px-2.5 text-xs font-semibold rounded-full bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/30 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                <span>Reject</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={batchActionLoading}
+                onClick={handleBatchRetrigger}
+                className="h-7 px-3 text-xs font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {batchActionLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Play className="w-3 h-3 fill-current" />
+                )}
+                <span>Re-run</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Candidate Interview Rubric & Questions Modal */}
+      <InterviewModal
+        isOpen={!!selectedInterviewCandidate}
+        onClose={() => setSelectedInterviewCandidate(null)}
+        candidate={selectedInterviewCandidate}
+        jobTitle={selectedInterviewCandidate?.job_id?.title}
+      />
     </div>
   );
 };

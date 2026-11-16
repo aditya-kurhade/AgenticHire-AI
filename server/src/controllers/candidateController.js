@@ -150,8 +150,75 @@ const getCandidateById = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Batch update candidate status (shortlist or reject)
+ * @route   POST /api/candidates/batch-status
+ * @access  Private (Recruiter only)
+ */
+const batchUpdateStatus = async (req, res) => {
+  try {
+    const { candidateIds, status } = req.body;
+    if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Please provide candidateIds array' });
+    }
+    if (!['shortlist', 'reject', 'pending'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status. Must be shortlist, reject, or pending.' });
+    }
+
+    const result = await Candidate.updateMany(
+      { _id: { $in: candidateIds } },
+      { $set: { status } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Updated status to '${status}' for ${result.modifiedCount} candidates`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Batch update status error:', error.message);
+    return res.status(500).json({ success: false, error: error.message || 'Server error' });
+  }
+};
+
+/**
+ * @desc    Batch re-trigger recruitment workflow for candidates
+ * @route   POST /api/candidates/batch-retrigger
+ * @access  Private (Recruiter only)
+ */
+const batchRetrigger = async (req, res) => {
+  try {
+    const { candidateIds } = req.body;
+    if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'Please provide candidateIds array' });
+    }
+
+    const retriggered = [];
+    for (const candidateId of candidateIds) {
+      try {
+        const wf = await HiringWorkflowEngine.retrigger(candidateId);
+        retriggered.push({ candidateId, workflowId: wf._id, success: true });
+      } catch (err) {
+        console.error(`Failed to retrigger candidate ${candidateId}:`, err.message);
+        retriggered.push({ candidateId, error: err.message, success: false });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Re-triggered pipeline for ${retriggered.filter(r => r.success).length} candidates`,
+      results: retriggered
+    });
+  } catch (error) {
+    console.error('Batch retrigger error:', error.message);
+    return res.status(500).json({ success: false, error: error.message || 'Server error' });
+  }
+};
+
 module.exports = {
   uploadCandidate,
   getCandidates,
-  getCandidateById
+  getCandidateById,
+  batchUpdateStatus,
+  batchRetrigger
 };

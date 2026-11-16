@@ -5,7 +5,7 @@ const specLoader = require('../utils/specLoader');
 const { getLLMConfig, setLLMConfig, checkOllamaHealth } = require('../utils/llmClient');
 
 /**
- * @desc    Get system workflow settings (e.g. node colors and retry policies)
+ * @desc    Get system workflow settings (e.g. node colors, retry policies, auto-approval automation)
  * @route   GET /api/workflow/settings
  * @access  Private (Recruiter only)
  */
@@ -13,12 +13,36 @@ const getWorkflowSettings = async (req, res) => {
   try {
     const nodeColors = specLoader.loadNodeColors();
     const retryPolicy = specLoader.loadRetryPolicy();
+    const automation = HiringWorkflowEngine.getAutomationConfig();
     return res.status(200).json({
       success: true,
       data: {
         nodeColors,
-        retryPolicy
+        retryPolicy,
+        automation
       }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * @desc    Update system workflow automation settings (auto-approval toggle & threshold)
+ * @route   POST /api/workflow/automation-settings
+ * @access  Private (Recruiter only)
+ */
+const updateWorkflowAutomationSettings = async (req, res) => {
+  try {
+    const { autoApprovalEnabled, autoApprovalThreshold } = req.body;
+    const updated = HiringWorkflowEngine.setAutomationConfig({
+      autoApprovalEnabled,
+      autoApprovalThreshold
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'Workflow automation settings updated',
+      data: updated
     });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
@@ -240,6 +264,7 @@ const getWorkflowById = async (req, res) => {
 
 module.exports = {
   getWorkflowSettings,
+  updateWorkflowAutomationSettings,
   getWorkflowLLMSettings,
   updateWorkflowLLMSettings,
   getWorkflowByCandidateId,

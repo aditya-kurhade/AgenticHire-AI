@@ -95,6 +95,14 @@ const Dashboard = () => {
     return localStorage.getItem('agentichire_sidebar_pinned') === 'true';
   });
 
+  useEffect(() => {
+    const isExpandedNow = sidebarOpen || sidebarHovered || sidebarPinned;
+    document.documentElement.style.setProperty(
+      '--sidebar-current-width',
+      isExpandedNow ? '16rem' : '4.5rem'
+    );
+  }, [sidebarOpen, sidebarHovered, sidebarPinned]);
+
   const toggleSidebarPin = () => {
     setSidebarPinned(prev => {
       const next = !prev;
@@ -606,8 +614,14 @@ const Dashboard = () => {
 
       {/* SideNavBar — desktop pinned/hover-expandable fixed + mobile drawer */}
       <aside
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
+        onMouseEnter={() => {
+          setSidebarHovered(true);
+          document.documentElement.style.setProperty('--sidebar-current-width', '16rem');
+        }}
+        onMouseLeave={() => {
+          setSidebarHovered(false);
+          document.documentElement.style.setProperty('--sidebar-current-width', sidebarPinned ? '16rem' : '4.5rem');
+        }}
         className={cn(
           'bg-card border-r border-border h-screen fixed left-0 top-0 flex flex-col py-5 px-3 z-[70] select-none transition-all duration-300 ease-in-out',
           sidebarOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full lg:translate-x-0',
@@ -780,6 +794,7 @@ const Dashboard = () => {
                   setCandidateMinMatch={setCandidateMinMatch}
                   setSelectedCandidateId={setSelectedCandidateId}
                   openDashboardTab={openDashboardTab}
+                  refreshCandidates={() => setRefreshTrigger(prev => prev + 1)}
                 />
               )}
 
