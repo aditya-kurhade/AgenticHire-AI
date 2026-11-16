@@ -88,6 +88,32 @@ const ApplyJob = () => {
     );
   }
 
+  // Handle Inactive Job State
+  if (job && job.status === 'inactive') {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-card p-8 rounded-2xl border border-border shadow-md space-y-5 flex flex-col items-center">
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Applications Closed</h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This job position (<strong className="text-foreground">{job.title}</strong>) is currently inactive and is not accepting new candidate applications.
+            </p>
+          </div>
+          <Button 
+            onClick={() => navigate('/')} 
+            className="w-full"
+            variant="secondary"
+          >
+            Explore Open Positions
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 text-center">

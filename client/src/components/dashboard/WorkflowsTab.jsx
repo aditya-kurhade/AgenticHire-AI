@@ -139,31 +139,41 @@ export default function WorkflowsTab({
         actions={
           <div className="flex flex-wrap items-center gap-2">
             {/* Auto-Approval Rule Control Pill */}
-            <div className="bg-card border border-border px-3 py-1.5 rounded-lg shadow-xs flex items-center gap-2.5">
+            <div className={`px-2.5 py-1 rounded-lg border transition-all flex items-center gap-2.5 shadow-2xs ${
+              autoApproval.enabled
+                ? 'bg-primary/5 border-primary/30 text-foreground'
+                : 'bg-card border-border text-muted-foreground'
+            }`}>
               <div className="flex items-center gap-1.5">
-                <Zap className={`w-3.5 h-3.5 ${autoApproval.enabled ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} />
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                  autoApproval.enabled ? 'bg-amber-500/15 text-amber-500' : 'bg-muted text-muted-foreground'
+                }`}>
+                  <Zap className={`w-3 h-3 ${autoApproval.enabled ? 'fill-amber-500' : ''}`} />
+                </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-semibold text-muted-foreground block leading-tight">
-                    Auto-Approval
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block leading-tight">
+                    Auto-Approve
                   </span>
                   <span className="text-xs font-semibold text-foreground">
-                    {autoApproval.enabled ? `≥ ${autoApproval.threshold}% Match` : 'Manual Review'}
+                    {autoApproval.enabled ? `≥${autoApproval.threshold}% Match` : 'Manual'}
                   </span>
                 </div>
               </div>
 
               <button
                 type="button"
+                role="switch"
+                aria-checked={autoApproval.enabled}
                 disabled={autoApprovalUpdating}
                 onClick={handleToggleAutoApproval}
                 aria-label="Toggle auto approval"
-                className={`w-9 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${
-                  autoApproval.enabled ? 'bg-primary' : 'bg-muted'
+                className={`w-8 h-4.5 rounded-full p-0.5 transition-colors relative cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary ${
+                  autoApproval.enabled ? 'bg-primary' : 'bg-muted-foreground/30'
                 }`}
               >
                 <div
-                  className={`w-4 h-4 rounded-full bg-white transition-transform shadow-xs ${
-                    autoApproval.enabled ? 'translate-x-4' : 'translate-x-0'
+                  className={`w-3.5 h-3.5 rounded-full bg-white transition-transform shadow-xs ${
+                    autoApproval.enabled ? 'translate-x-3.5' : 'translate-x-0'
                   }`}
                 />
               </button>

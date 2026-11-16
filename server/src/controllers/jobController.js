@@ -6,7 +6,7 @@ const Job = require('../models/Job');
  * @access  Private (Recruiter only)
  */
 const createJob = async (req, res) => {
-  const { title, description, required_skills, preferred_skills, min_experience, workflow_spec_id } = req.body;
+  const { title, description, required_skills, preferred_skills, min_experience, workflow_spec_id, status } = req.body;
 
   try {
     const job = await Job.create({
@@ -15,7 +15,8 @@ const createJob = async (req, res) => {
       required_skills: required_skills || [],
       preferred_skills: preferred_skills || [],
       min_experience,
-      workflow_spec_id: workflow_spec_id || 'default-hiring-workflow'
+      workflow_spec_id: workflow_spec_id || 'default-hiring-workflow',
+      status: status || 'active'
     });
 
     return res.status(201).json({
@@ -77,7 +78,7 @@ const getJobById = async (req, res) => {
  * @access  Private (Recruiter only)
  */
 const updateJob = async (req, res) => {
-  const { title, description, required_skills, preferred_skills, min_experience, workflow_spec_id } = req.body;
+  const { title, description, required_skills, preferred_skills, min_experience, workflow_spec_id, status } = req.body;
 
   try {
     let job = await Job.findById(req.params.id);
@@ -92,6 +93,7 @@ const updateJob = async (req, res) => {
     if (preferred_skills !== undefined) job.preferred_skills = preferred_skills;
     if (min_experience !== undefined) job.min_experience = min_experience;
     if (workflow_spec_id !== undefined) job.workflow_spec_id = workflow_spec_id;
+    if (status !== undefined) job.status = status;
 
     await job.save();
 

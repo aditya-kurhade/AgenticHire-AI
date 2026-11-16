@@ -7,7 +7,7 @@ const {
   updateJob
 } = require('../controllers/jobController');
 const { protect } = require('../middleware/auth');
-const { validateJob } = require('../middleware/validators');
+const { validateJob, validateUpdateJob } = require('../middleware/validators');
 
 // @route   POST /api/jobs
 // @desc    Create a new job specification
@@ -27,6 +27,6 @@ router.get('/:id', getJobById);
 // @route   PUT /api/jobs/:id
 // @desc    Update a job specification
 // @access  Private (Recruiter only)
-router.put('/:id', protect, validateJob, updateJob);
+router.put('/:id', protect, validateUpdateJob, updateJob);
 
 module.exports = router;

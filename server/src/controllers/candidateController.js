@@ -35,13 +35,23 @@ const uploadCandidate = async (req, res) => {
 
     const { name, email, phone, github_url, jobId } = validationResult.data;
 
-    // Verify Job exists
+    // Verify Job exists and is active for applications
     const job = await Job.findById(jobId);
     if (!job) {
       if (fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
       return res.status(404).json({ success: false, error: 'Target job specification not found' });
+    }
+
+    if (job.status === 'inactive') {
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(400).json({
+        success: false,
+        error: 'This job opening is currently inactive and no longer accepting new applications.'
+      });
     }
 
     // Clean github handle from provided url if present

@@ -26,6 +26,11 @@ const JobSchema = new mongoose.Schema({
   workflow_spec_id: {
     type: String,
     default: 'default-hiring-workflow'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

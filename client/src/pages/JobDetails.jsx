@@ -80,12 +80,23 @@ const JobDetails = () => {
         <div className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-xs space-y-6 text-left">
           {/* Header Info */}
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-3 leading-tight">
-              {job.title}
-            </h1>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                {job.title}
+              </h1>
+              {job.status === 'inactive' ? (
+                <span className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-500/10 text-zinc-500 border border-zinc-500/20">
+                  Applications Closed
+                </span>
+              ) : (
+                <span className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                  Open for Applications
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground font-medium">
               <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-primary" /> Full-time</span>
-              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> Actively Screening</span>
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary" /> {job.status === 'inactive' ? 'Screening Completed' : 'Actively Screening'}</span>
               <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-primary" /> {job.min_experience}+ years experience</span>
             </div>
           </div>
@@ -146,17 +157,33 @@ const JobDetails = () => {
           {/* Call to Action */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
             <div>
-              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-0.5">Apply with your Resume</p>
-              <p className="text-xs text-muted-foreground">Takes less than 2 minutes to submit your PDF resume.</p>
+              <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-0.5">
+                {job.status === 'inactive' ? 'Applications Inactive' : 'Apply with your Resume'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {job.status === 'inactive'
+                  ? 'This position is currently closed or in review. New candidate submissions are paused.'
+                  : 'Takes less than 2 minutes to submit your PDF resume.'}
+              </p>
             </div>
-            <Button
-              onClick={() => navigate(`/jobs/${job._id}/apply`)}
-              className="w-full sm:w-auto flex items-center gap-1.5"
-              size="lg"
-            >
-              Apply for this Role
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            {job.status === 'inactive' ? (
+              <Button
+                disabled
+                className="w-full sm:w-auto opacity-60 cursor-not-allowed bg-muted text-muted-foreground hover:bg-muted"
+                size="lg"
+              >
+                Applications Closed
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate(`/jobs/${job._id}/apply`)}
+                className="w-full sm:w-auto flex items-center gap-1.5"
+                size="lg"
+              >
+                Apply for this Role
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </main>

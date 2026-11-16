@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../ui/PageHeader';
 import { StatCard } from '../ui/StatCard';
@@ -14,7 +15,10 @@ import {
   ChevronRight,
   GitBranch,
   CheckCircle2,
-  FileText
+  FileText,
+  Edit,
+  Power,
+  Loader2
 } from 'lucide-react';
 
 const JobSpecsTab = ({
@@ -22,8 +26,23 @@ const JobSpecsTab = ({
   candidates,
   openDashboardTab,
   setSelectedJobId,
-  setShowCreateModal
+  setShowCreateModal,
+  onEditJob,
+  onToggleStatus
 }) => {
+  const [togglingJobId, setTogglingJobId] = useState(null);
+
+  const handleToggle = async (job) => {
+    if (togglingJobId) return;
+    try {
+      setTogglingJobId(job._id);
+      if (onToggleStatus) {
+        await onToggleStatus(job);
+      }
+    } finally {
+      setTogglingJobId(null);
+    }
+  };
   return (
     <div className="space-y-6">
       <PageHeader
@@ -93,9 +112,17 @@ const JobSpecsTab = ({
                         Min. experience: {job.min_experience || 0} years
                       </p>
                     </div>
-                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-medium text-[11px]">
-                      Active
-                    </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {job.status === 'inactive' ? (
+                        <Badge variant="outline" className="bg-zinc-500/10 text-zinc-500 border-zinc-500/20 font-medium text-[11px]">
+                          Inactive
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-medium text-[11px]">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   <div className="bg-secondary/40 rounded-lg p-3 border border-border/50">
@@ -154,6 +181,38 @@ const JobSpecsTab = ({
                         Pipeline
                       </Button>
                     </div>
+
+                    {/* Job Actions: Edit & Toggle Active/Inactive */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1.5 text-xs text-foreground"
+                        onClick={() => onEditJob && onEditJob(job)}
+                      >
+                        <Edit className="w-3.5 h-3.5 text-primary" />
+                        Edit Spec
+                      </Button>
+                      <Button
+                        variant={job.status === 'inactive' ? 'default' : 'secondary'}
+                        size="sm"
+                        disabled={togglingJobId === job._id}
+                        className={`flex-1 flex items-center justify-center gap-1.5 text-xs transition-colors ${
+                          job.status === 'inactive'
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
+                        }`}
+                        onClick={() => handleToggle(job)}
+                      >
+                        {togglingJobId === job._id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Power className="w-3.5 h-3.5" />
+                        )}
+                        {job.status === 'inactive' ? 'Activate' : 'Deactivate'}
+                      </Button>
+                    </div>
+
                     <div className="flex justify-between items-center pt-1 px-0.5">
                       <Link
                         to={`/jobs/${job._id}`}

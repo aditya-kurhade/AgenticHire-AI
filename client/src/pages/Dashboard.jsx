@@ -40,7 +40,11 @@ import {
   Activity,
   AlertCircle,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Info,
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -112,13 +116,16 @@ const Dashboard = () => {
   };
 
   const [showCreateModal, setShowCreateModal] = useState(() => location.pathname.includes('/dashboard/jobs/create'));
+  const [editingJob, setEditingJob] = useState(null);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDesc, setJobDesc] = useState('');
   const [jobMinExp, setJobMinExp] = useState(0);
   const [jobRequiredSkills, setJobRequiredSkills] = useState('');
   const [jobPreferredSkills, setJobPreferredSkills] = useState('');
+  const [jobStatus, setJobStatus] = useState('active');
   const [jobCreating, setJobCreating] = useState(false);
   const [formError, setFormError] = useState('');
+  const [showHowToTestModal, setShowHowToTestModal] = useState(false);
 
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -340,7 +347,43 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreateJob = async (e) => {
+  const handleOpenCreateModal = () => {
+    setEditingJob(null);
+    setJobTitle('');
+    setJobDesc('');
+    setJobMinExp(0);
+    setJobRequiredSkills('');
+    setJobPreferredSkills('');
+    setJobStatus('active');
+    setFormError('');
+    setShowCreateModal(true);
+  };
+
+  const handleOpenEditModal = (job) => {
+    setEditingJob(job);
+    setJobTitle(job.title || '');
+    setJobDesc(job.description || '');
+    setJobMinExp(job.min_experience || 0);
+    setJobRequiredSkills(Array.isArray(job.required_skills) ? job.required_skills.join(', ') : '');
+    setJobPreferredSkills(Array.isArray(job.preferred_skills) ? job.preferred_skills.join(', ') : '');
+    setJobStatus(job.status || 'active');
+    setFormError('');
+    setShowCreateModal(true);
+  };
+
+  const handleToggleJobStatus = async (job) => {
+    const nextStatus = job.status === 'inactive' ? 'active' : 'inactive';
+    try {
+      const res = await api.put(`/jobs/${job._id}`, { status: nextStatus });
+      if (res.data?.success) {
+        setJobs(prev => prev.map(j => j._id === job._id ? { ...j, status: nextStatus } : j));
+      }
+    } catch (err) {
+      console.error('Failed to toggle job status:', err);
+    }
+  };
+
+  const handleSaveJob = async (e) => {
     e.preventDefault();
     setFormError('');
     setJobCreating(true);
@@ -353,27 +396,41 @@ const Dashboard = () => {
       : [];
 
     try {
-      const response = await api.post('/jobs', {
-        title: jobTitle,
-        description: jobDesc,
-        min_experience: Number(jobMinExp),
-        required_skills: requiredArray,
-        preferred_skills: preferredArray,
-        workflow_spec_id: 'default-hiring-workflow'
-      });
+      if (editingJob) {
+        const response = await api.put(`/jobs/${editingJob._id}`, {
+          title: jobTitle,
+          description: jobDesc,
+          min_experience: Number(jobMinExp),
+          required_skills: requiredArray,
+          preferred_skills: preferredArray,
+          status: jobStatus
+        });
 
-      if (response.data.success) {
-        setJobTitle('');
-        setJobDesc('');
-        setJobMinExp(0);
-        setJobRequiredSkills('');
-        setJobPreferredSkills('');
-        setShowCreateModal(false);
-        setRefreshTrigger(prev => prev + 1);
-        openDashboardTab('jobs');
+        if (response.data.success) {
+          setShowCreateModal(false);
+          setEditingJob(null);
+          setRefreshTrigger(prev => prev + 1);
+        }
+      } else {
+        const response = await api.post('/jobs', {
+          title: jobTitle,
+          description: jobDesc,
+          min_experience: Number(jobMinExp),
+          required_skills: requiredArray,
+          preferred_skills: preferredArray,
+          status: jobStatus,
+          workflow_spec_id: 'default-hiring-workflow'
+        });
+
+        if (response.data.success) {
+          setShowCreateModal(false);
+          setEditingJob(null);
+          setRefreshTrigger(prev => prev + 1);
+          openDashboardTab('jobs');
+        }
       }
     } catch (err) {
-      setFormError(err.response?.data?.error || 'Failed to create Job Specification.');
+      setFormError(err.response?.data?.error || `Failed to ${editingJob ? 'update' : 'create'} Job Specification.`);
     } finally {
       setJobCreating(false);
     }
@@ -456,7 +513,7 @@ const Dashboard = () => {
       <div className="mb-5">
         <Button
           onClick={() => {
-            setShowCreateModal(true);
+            handleOpenCreateModal();
             setSidebarOpen(false);
           }}
           title="New Job Spec"
@@ -665,13 +722,21 @@ const Dashboard = () => {
             <button
               type="button"
               onClick={() => { setShowSearchOverlay(true); setSearchQuery(''); }}
-              className="relative hidden sm:flex items-center bg-secondary/60 border border-input rounded-lg pl-9 pr-3 py-1.5 w-48 lg:w-64 text-xs font-medium text-muted-foreground hover:border-ring/50 hover:bg-secondary transition-all text-left"
+              className="relative hidden sm:flex items-center bg-secondary/60 border border-input rounded-lg pl-9 pr-2.5 py-1.5 w-52 lg:w-72 text-xs font-medium text-muted-foreground hover:border-ring/50 hover:bg-secondary transition-all text-left group"
             >
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-muted-foreground pointer-events-none">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-muted-foreground group-hover:text-foreground transition-colors pointer-events-none">
                 <Search className="w-4 h-4" />
               </span>
-              <span className="truncate">Search jobs, candidates…</span>
-              <kbd className="ml-auto hidden lg:inline text-[10px] font-semibold bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground">⌘K</kbd>
+              <span className="truncate pr-2">Search jobs, candidates…</span>
+              <span className="ml-auto flex items-center gap-1 shrink-0">
+                <kbd className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-background text-foreground/80 border border-border rounded shadow-2xs font-mono">
+                  Ctrl
+                </kbd>
+                <span className="text-[10px] text-muted-foreground font-medium">+</span>
+                <kbd className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-background text-foreground/80 border border-border rounded shadow-2xs font-mono">
+                  K
+                </kbd>
+              </span>
             </button>
 
             <div className="w-48 sm:w-64">
@@ -731,6 +796,17 @@ const Dashboard = () => {
               />
             </button>
 
+            {/* How to Use Guide (Info Button) */}
+            <button
+              type="button"
+              onClick={() => setShowHowToTestModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all shadow-2xs"
+              title="How to use this platform"
+            >
+              <Info className="w-4 h-4 text-primary" />
+              <span className="hidden md:inline">How to Use</span>
+            </button>
+
             {/* Dark Mode Toggle */}
             <button
               type="button"
@@ -764,7 +840,7 @@ const Dashboard = () => {
                   candidates={candidates}
                   selectedJobId={selectedJobId}
                   setSelectedJobId={setSelectedJobId}
-                  setShowCreateModal={setShowCreateModal}
+                  setShowCreateModal={handleOpenCreateModal}
                   openDashboardTab={openDashboardTab}
                 />
               )}
@@ -776,7 +852,9 @@ const Dashboard = () => {
                   selectedJobId={selectedJobId}
                   setSelectedJobId={setSelectedJobId}
                   openDashboardTab={openDashboardTab}
-                  setShowCreateModal={setShowCreateModal}
+                  setShowCreateModal={handleOpenCreateModal}
+                  onEditJob={handleOpenEditModal}
+                  onToggleStatus={handleToggleJobStatus}
                 />
               )}
 
@@ -1012,8 +1090,11 @@ const Dashboard = () => {
 
       <Modal
         open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Create Job Specification"
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingJob(null);
+        }}
+        title={editingJob ? "Edit Job Specification" : "Create Job Specification"}
       >
         {formError && (
           <div className="p-3 bg-destructive/10 text-destructive text-xs border border-destructive/20 rounded-lg mb-4 font-medium flex items-center gap-2">
@@ -1022,7 +1103,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        <form onSubmit={handleCreateJob} className="space-y-4">
+        <form onSubmit={handleSaveJob} className="space-y-4">
           <div>
             <label className="text-xs font-medium text-foreground block mb-1.5">Job Title</label>
             <input
@@ -1045,16 +1126,29 @@ const Dashboard = () => {
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             />
           </div>
-          <div>
-            <label className="text-xs font-medium text-foreground block mb-1.5">Minimum Experience (Years)</label>
-            <input
-              type="number"
-              required
-              min="0"
-              value={jobMinExp}
-              onChange={(e) => setJobMinExp(e.target.value)}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1.5">Minimum Experience (Years)</label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={jobMinExp}
+                onChange={(e) => setJobMinExp(e.target.value)}
+                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1.5">Application Status</label>
+              <Dropdown
+                value={jobStatus}
+                onChange={(e) => setJobStatus(e.target.value)}
+                className="w-full"
+              >
+                <option value="active">Active (Accepting applications)</option>
+                <option value="inactive">Inactive (Applications closed)</option>
+              </Dropdown>
+            </div>
           </div>
           <div>
             <label className="text-xs font-medium text-foreground block mb-1.5">Required Skills (comma separated)</label>
@@ -1077,9 +1171,120 @@ const Dashboard = () => {
             />
           </div>
           <Button type="submit" loading={jobCreating} className="w-full mt-2" size="lg">
-            {jobCreating ? 'Creating…' : 'Create Spec'}
+            {jobCreating ? (editingJob ? 'Updating…' : 'Creating…') : (editingJob ? 'Update Spec' : 'Create Spec')}
           </Button>
         </form>
+      </Modal>
+
+      {/* How to Use Platform Guide Modal */}
+      <Modal
+        open={showHowToTestModal}
+        onClose={() => setShowHowToTestModal(false)}
+        title="How to Use AgentHire AI: End-to-End Walkthrough"
+      >
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Follow this 3-step walkthrough to understand how autonomous AI agents evaluate resumes, verify GitHub repositories, and synthesize technical assessments.
+          </p>
+
+          <div className="space-y-3">
+            {/* Step 1 */}
+            <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                1
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-foreground">Create or Select a Job Spec</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Go to <strong className="text-foreground font-medium">Job Specs</strong> and click <strong className="text-foreground font-medium">+ New Job Spec</strong> (or use an existing active role). Define title, minimum experience, and required skills.
+                </p>
+                <div className="pt-1 flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[11px] px-2.5"
+                    onClick={() => {
+                      setShowHowToTestModal(false);
+                      handleOpenCreateModal();
+                    }}
+                  >
+                    Create Spec Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 font-bold text-xs flex items-center justify-center shrink-0">
+                2
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-foreground">Apply via Candidate Link</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Open the job's <strong className="text-foreground font-medium">Public Portal</strong> link and submit a candidate application with a resume PDF (and GitHub profile URL).
+                </p>
+                {jobs.length > 0 && (
+                  <div className="pt-1">
+                    <Link
+                      to={`/jobs/${jobs[0]._id}`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                    >
+                      Open Sample Job Portal ({jobs[0].title})
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold text-xs flex items-center justify-center shrink-0">
+                3
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-foreground">Inspect Autonomous Multi-Agent Workflow</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Switch to the <strong className="text-foreground font-medium">AI Workflows</strong> tab. Watch live execution of:
+                </p>
+                <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc list-inside mt-1">
+                  <li><span className="text-foreground font-medium">Agent 1:</span> PDF Resume Parsing</li>
+                  <li><span className="text-foreground font-medium">Agent 2:</span> Vector Embeddings (Qdrant)</li>
+                  <li><span className="text-foreground font-medium">Agent 3:</span> Semantic RAG Matching & Skill Gap Analysis</li>
+                  <li><span className="text-foreground font-medium">Agent 4:</span> Empirical GitHub Verification (MCP Protocol)</li>
+                  <li><span className="text-foreground font-medium">Agent 5:</span> Tailored Technical Interview Rubric</li>
+                </ul>
+                <div className="pt-1.5">
+                  <Button
+                    size="sm"
+                    className="h-7 text-[11px] px-2.5"
+                    onClick={() => {
+                      setShowHowToTestModal(false);
+                      openDashboardTab('workflows');
+                    }}
+                  >
+                    Go to AI Workflows
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-secondary/50 border border-border text-[11px] text-muted-foreground flex items-center justify-between">
+            <span>Toggle <strong>Auto-Approval</strong> or manually review candidates at the Human Review checkpoint.</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setShowHowToTestModal(false)}
+            >
+              Got it
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Search Overlay */}
