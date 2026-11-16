@@ -2,14 +2,16 @@ import * as React from 'react';
 import { cn } from '../../lib/utils';
 import { X } from 'lucide-react';
 
-export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) {
+export function Modal({ isOpen, open, onClose, title, children, maxWidth = 'max-w-lg' }) {
+  const isVisible = isOpen ?? open ?? false;
+
   React.useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && isVisible) {
+        onClose?.();
       }
     };
-    if (isOpen) {
+    if (isVisible) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
@@ -17,9 +19,9 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' 
       document.body.style.overflow = 'unset';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isVisible, onClose]);
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -45,7 +47,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' 
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -56,3 +58,5 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' 
     </div>
   );
 }
+
+export default Modal;

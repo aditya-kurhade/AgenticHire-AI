@@ -73,6 +73,8 @@ export default function AnalyticsTab({
     <div className="space-y-6">
       <PageHeader
         title="Recruitment Performance"
+        category="Intelligence & Metrics"
+        icon={BarChart3}
         badge={selectedJobId !== 'all' && (
           <Badge variant="outline" className="flex items-center gap-1.5 bg-primary/10 text-primary border-primary/20">
             <Filter className="w-3.5 h-3.5" />

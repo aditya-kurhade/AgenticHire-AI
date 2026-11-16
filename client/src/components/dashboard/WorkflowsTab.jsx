@@ -53,6 +53,8 @@ export default function WorkflowsTab({
     <div className="space-y-6">
       <PageHeader
         title="Orchestration Engine"
+        category="Autonomous Agents"
+        icon={GitFork}
         description="Monitor pipeline execution, checkpoints, and human review points."
         actions={
           <div className="flex items-center gap-2">
@@ -351,7 +353,7 @@ export default function WorkflowsTab({
                 <div className="flex justify-between items-center py-2 border-b border-border/60 gap-2">
                   <span className="text-muted-foreground">LLM Provider</span>
                   <span className="font-medium bg-secondary px-2 py-0.5 rounded text-right text-foreground">
-                    {llmSettings?.provider === 'ollama' ? `Ollama (${llmSettings?.ollamaModel})` : 'Groq'}
+                    {llmSettings?.provider === 'ollama' ? `Ollama (${llmSettings?.ollamaModel})` : 'OpenRouter Cloud'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/60">

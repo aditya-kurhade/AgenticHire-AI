@@ -122,49 +122,47 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
 
   return (
     <div className="space-y-6">
-      {/* Sleek Header with Inline Segmented Switch */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-border/80">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Knowledge Base</h1>
-            <Badge variant="outline" className="flex items-center gap-1.5 bg-primary/10 text-primary border-primary/20 text-xs py-0.5">
-              <BrainCircuit className="w-3.5 h-3.5" />
-              Qdrant Cloud • 384-d
-            </Badge>
+      {/* Standardized PageHeader with Segmented Actions */}
+      <PageHeader
+        title="Vector Knowledge Base"
+        category="Semantic Search & RAG"
+        icon={BrainCircuit}
+        badge={
+          <Badge variant="outline" className="flex items-center gap-1.5 bg-primary/10 text-primary border-primary/20 text-xs py-0.5">
+            <Database className="w-3.5 h-3.5" />
+            Qdrant Cloud • 384-d
+          </Badge>
+        }
+        description="Semantic vector search across candidate resumes and organizational hiring standards."
+        actions={
+          <div className="flex items-center p-1 bg-secondary/80 rounded-xl border border-border shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('search')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                activeSubTab === 'search'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              Vector Search
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('add')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                activeSubTab === 'add'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              Index Policy
+            </button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Semantic vector search across candidate resumes and organizational standards.
-          </p>
-        </div>
-
-        {/* View Switcher Tabs */}
-        <div className="flex items-center p-1 bg-secondary/80 rounded-lg border border-border shrink-0 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('search')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              activeSubTab === 'search'
-                ? 'bg-card text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Search className="w-3.5 h-3.5" />
-            Vector Search
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('add')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              activeSubTab === 'add'
-                ? 'bg-card text-foreground shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            Index Policy
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {activeSubTab === 'search' ? (
         /* Modern 2-Column Split Layout */

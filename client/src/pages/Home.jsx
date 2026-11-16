@@ -141,7 +141,7 @@ const Home = () => {
                   <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
                     <span className="text-[10px] font-semibold uppercase text-muted-foreground block">LLM Reasoning</span>
                     <p className="text-sm font-semibold text-foreground mt-0.5">Threshold Match</p>
-                    <span className="text-[11px] text-blue-600 font-medium">Groq / Ollama</span>
+                    <span className="text-[11px] text-blue-600 font-medium">OpenRouter / Ollama</span>
                   </div>
                   <div className="p-3.5 rounded-xl bg-secondary/40 border border-border">
                     <span className="text-[10px] font-semibold uppercase text-muted-foreground block">Human Review</span>
@@ -252,11 +252,11 @@ const Home = () => {
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">Dual-Engine Runtime</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Switch between lightning-fast cloud LLMs via Groq and local air-gapped models via Ollama (Llama-3 8B) for complete data privacy.
+                    Switch between lightning-fast cloud LLMs via OpenRouter and local air-gapped models via Ollama (Llama-3 8B) for complete data privacy.
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded font-mono text-muted-foreground">Groq Cloud</span>
+                  <span className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded font-mono text-muted-foreground">OpenRouter Cloud</span>
                   <span className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded font-mono text-muted-foreground">Local Ollama</span>
                 </div>
               </div>
@@ -384,7 +384,7 @@ const Home = () => {
                   <ul className="space-y-2.5 text-xs text-muted-foreground">
                     <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> 25 Active Job Slots</li>
                     <li className="flex items-center gap-2 text-foreground font-medium"><Check className="w-3.5 h-3.5 text-primary" /> Full Multi-Agent Squad</li>
-                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Groq + Local Ollama Engine</li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> OpenRouter + Local Ollama Engine</li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Human Gatekeeper Controls</li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-primary" /> Real-time WebSocket Telemetry</li>
                   </ul>

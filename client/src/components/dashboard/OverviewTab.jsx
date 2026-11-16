@@ -29,6 +29,8 @@ const OverviewTab = ({
     <div className="space-y-6">
       <PageHeader
         title="Recruitment Funnel"
+        category="Talent Pipeline"
+        icon={Briefcase}
         badge={selectedJobId !== 'all' && (
           <Badge variant="outline" className="flex items-center gap-1.5 bg-primary/10 text-primary border-primary/20">
             <Briefcase className="w-3.5 h-3.5" />

@@ -28,6 +28,8 @@ const JobSpecsTab = ({
     <div className="space-y-6">
       <PageHeader
         title="Job Specifications"
+        category="Role Management"
+        icon={FileText}
         description="Configure AI screening criteria and talent matching for each open role."
         actions={
           <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">

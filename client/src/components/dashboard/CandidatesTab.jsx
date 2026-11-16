@@ -46,6 +46,8 @@ const CandidatesTab = ({
     <div className="space-y-6">
       <PageHeader
         title="Candidate Pipeline"
+        category="Talent Pool"
+        icon={Users}
         description="Evaluate AI-matched talent across your open roles."
         actions={
           <div className="flex items-center gap-2">

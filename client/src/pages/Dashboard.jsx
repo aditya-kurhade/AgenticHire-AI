@@ -11,8 +11,10 @@ import KnowledgeBaseTab from '../components/dashboard/KnowledgeBaseTab';
 import { useRealtimeWorkflow } from '../hooks/useRealtimeWorkflow';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
+import { Dropdown } from '../components/ui/Dropdown';
 import { Modal } from '../components/ui/Modal';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { PageHeader } from '../components/ui/PageHeader';
 import { cn } from '../lib/utils';
 import {
   LayoutDashboard,
@@ -130,7 +132,7 @@ const Dashboard = () => {
 
   const [llmSettings, setLlmSettings] = useState({
     provider: 'cloud',
-    ollamaModel: 'llama3:8b',
+    ollamaModel: 'llama3.2:3b',
     ollamaBaseUrl: 'http://localhost:11434',
     ollamaStatus: { online: false, models: [] }
   });
@@ -658,25 +660,24 @@ const Dashboard = () => {
               <kbd className="ml-auto hidden lg:inline text-[10px] font-semibold bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground">⌘K</kbd>
             </button>
 
-            <div className="relative flex items-center bg-secondary/60 hover:bg-secondary border border-input rounded-lg px-2.5 sm:px-3 py-1 gap-2 hover:border-ring/50 transition-all min-w-0 group shadow-2xs">
-              <Briefcase className="w-4 h-4 text-primary shrink-0" />
-              <div className="flex flex-col text-left min-w-0">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none hidden sm:block">Job Context</span>
-                <select
-                  value={selectedJobId}
-                  onChange={(e) => setSelectedJobId(e.target.value)}
-                  className="bg-transparent appearance-none border-none text-xs font-semibold text-foreground outline-none cursor-pointer pr-4 py-0.5 max-w-[130px] sm:max-w-[200px] truncate focus:ring-0 [&>option]:bg-card [&>option]:text-card-foreground"
-                  aria-label="Filter by job"
-                >
-                  <option value="all">All Openings ({jobs.length})</option>
-                  {jobs.map((job) => (
-                    <option key={job._id} value={job._id}>
-                      {job.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground pointer-events-none shrink-0 group-hover:text-foreground transition-colors ml-0.5" />
+            <div className="w-48 sm:w-64">
+              <Dropdown
+                size="sm"
+                icon={Briefcase}
+                value={selectedJobId}
+                onChange={(e) => setSelectedJobId(e.target.value)}
+                searchable
+                searchPlaceholder="Search openings..."
+                placeholder="All Openings"
+                className="w-full"
+              >
+                <option value="all">All Openings ({jobs.length})</option>
+                {jobs.map((job) => (
+                  <option key={job._id} value={job._id}>
+                    {job.title}
+                  </option>
+                ))}
+              </Dropdown>
             </div>
           </div>
 
@@ -817,12 +818,12 @@ const Dashboard = () => {
 
               {activeTab === 'support' && (
                 <div className="space-y-6">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Support & Diagnostics</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      System health, integration connectivity, and agent runtime configuration.
-                    </p>
-                  </div>
+                  <PageHeader
+                    title="Support & Diagnostics"
+                    category="System Telemetry"
+                    icon={Activity}
+                    description="System health, integration connectivity, and agent runtime configuration."
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl">
                     <div className="bg-card border border-border rounded-xl p-6 text-left shadow-xs">
@@ -880,12 +881,12 @@ const Dashboard = () => {
 
               {activeTab === 'settings' && (
                 <div className="space-y-6">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Settings</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Recruitment thresholds and LLM engine configuration.
-                    </p>
-                  </div>
+                  <PageHeader
+                    title="Settings"
+                    category="Platform Preferences"
+                    icon={Settings}
+                    description="Recruitment thresholds, agent automation triggers, and LLM engine configuration."
+                  />
 
                   <div className="bg-card border border-border rounded-xl p-6 text-left max-w-2xl shadow-xs">
                     <h3 className="text-base font-semibold text-foreground mb-4">LLM & Local Model Engine</h3>
@@ -905,7 +906,7 @@ const Dashboard = () => {
                             )}
                           >
                             <Cloud className="w-4 h-4" />
-                            Cloud (Groq)
+                            Cloud (OpenRouter)
                           </button>
                           <button
                             type="button"
@@ -957,7 +958,7 @@ const Dashboard = () => {
                                 type="text"
                                 value={llmSettings.ollamaModel}
                                 onChange={(e) => handleToggleLLMProvider('ollama', e.target.value)}
-                                placeholder="llama3:8b"
+                                placeholder="llama3.2:3b"
                                 className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                               />
                             )}
