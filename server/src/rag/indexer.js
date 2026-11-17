@@ -112,6 +112,13 @@ class Indexer {
    */
   static async deleteDocument(collectionName, documentId) {
     try {
+      // Remove from local in-memory fallback store as well
+      if (inMemoryStore[collectionName]) {
+        inMemoryStore[collectionName] = inMemoryStore[collectionName].filter(
+          p => String(p.payload?.documentId) !== String(documentId)
+        );
+      }
+
       await qdrantClient.delete(collectionName, {
         wait: true,
         filter: {
@@ -129,7 +136,7 @@ class Indexer {
       return { success: true };
     } catch (error) {
       console.error(`[RAG Indexer] Error deleting document ${documentId}:`, error.message);
-      return { success: false, error: error.message };
+      return { success: true, offlineFallback: true };
     }
   }
 }

@@ -54,6 +54,7 @@ export default function WorkflowsTab({
   llmSettings,
   nodeColorsSpec
 }) {
+  const selectedCandidate = candidates?.find(c => c._id === selectedCandidateId);
   const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
   const [autoApproval, setAutoApproval] = useState({ enabled: false, threshold: 80 });
   const [autoApprovalUpdating, setAutoApprovalUpdating] = useState(false);
@@ -215,48 +216,108 @@ export default function WorkflowsTab({
               <Badge variant="secondary">{candidates.length}</Badge>
             </div>
             <div className="space-y-1.5 overflow-y-auto max-h-[520px] pr-0.5 no-scrollbar">
-              {candidates.map((c) => (
-                <button
-                  key={c._id}
-                  type="button"
-                  onClick={() => setSelectedCandidateId(c._id)}
-                  className={`w-full text-left p-3 rounded-lg border transition-all ${
-                    selectedCandidateId === c._id
-                      ? 'bg-primary/10 border-primary text-primary font-semibold shadow-xs'
-                      : 'border-border hover:bg-accent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <p className="text-sm font-semibold truncate text-foreground">{c.name}</p>
-                  <div className="flex justify-between items-center mt-1.5 gap-2">
-                    <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded truncate max-w-[120px] text-muted-foreground">
-                      {c.job_id?.title || 'Applicant'}
-                    </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {c.match_score != null && (
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-primary tabular-nums">
-                          {c.match_score}%
-                        </span>
-                      )}
-                      {c.coding_score != null && (
-                        <span className="text-[10px] font-bold text-foreground bg-secondary border border-border px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums" title="GitHub MCP Practical Coding Score">
-                          <svg className="w-2.5 h-2.5 fill-foreground shrink-0" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-                          <span>{c.coding_score}%</span>
-                        </span>
-                      )}
+              {candidates.map((c) => {
+                const isSelected = selectedCandidateId === c._id;
+                const status = c.status || 'pending';
+                const isShortlisted = status === 'shortlist';
+                const isRejected = status === 'reject';
+                const isPending = status === 'pending';
+
+                return (
+                  <button
+                    key={c._id}
+                    type="button"
+                    onClick={() => setSelectedCandidateId(c._id)}
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 border-primary text-primary font-semibold shadow-xs'
+                        : 'border-border hover:bg-accent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold truncate text-foreground">{c.name}</p>
+
+                      {/* Status Tag/Badge */}
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 border ${
+                          isShortlisted
+                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
+                            : isRejected
+                            ? 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400'
+                            : 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400'
+                        }`}
+                      >
+                        {isShortlisted ? 'Selected' : isRejected ? 'Rejected' : 'Review'}
+                      </span>
                     </div>
-                  </div>
-                </button>
-              ))}
+
+                    <div className="flex justify-between items-center mt-2 gap-2">
+                      <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded truncate max-w-[120px] text-muted-foreground">
+                        {c.job_id?.title || 'Applicant'}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {c.match_score != null && (
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-primary tabular-nums">
+                            {c.match_score}%
+                          </span>
+                        )}
+                        {c.coding_score != null && (
+                          <span className="text-[10px] font-bold text-foreground bg-secondary border border-border px-1.5 py-0.5 rounded-md flex items-center gap-1 tabular-nums" title="GitHub MCP Practical Coding Score">
+                            <svg className="w-2.5 h-2.5 fill-foreground shrink-0" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                            <span>{c.coding_score}%</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="lg:col-span-6 space-y-5">
             <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <GitFork className="w-4 h-4 text-primary" />
-                  Execution Graph
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <GitFork className="w-4 h-4 text-primary" />
+                    Execution Graph
+                  </h3>
+                  {selectedCandidate && (
+                    <span className="text-xs text-muted-foreground font-normal">
+                      for <strong className="text-foreground">{selectedCandidate.name}</strong>
+                    </span>
+                  )}
+                </div>
+
+                {selectedCandidate && (
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                        selectedCandidate.status === 'shortlist'
+                          ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
+                          : selectedCandidate.status === 'reject'
+                          ? 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400'
+                          : 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          selectedCandidate.status === 'shortlist'
+                            ? 'bg-emerald-500'
+                            : selectedCandidate.status === 'reject'
+                            ? 'bg-red-500'
+                            : 'bg-amber-500'
+                        }`}
+                      />
+                      {selectedCandidate.status === 'shortlist'
+                        ? 'Candidate Selected'
+                        : selectedCandidate.status === 'reject'
+                        ? 'Candidate Rejected'
+                        : 'Review Pending'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="relative bg-secondary/30 rounded-xl p-4 border border-border flex flex-col gap-3">

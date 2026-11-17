@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PageHeader } from '../ui/PageHeader';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
+import { StatCard } from '../ui/StatCard';
 import api from '../../lib/api';
 import {
   BrainCircuit,
@@ -19,7 +20,24 @@ import {
   AlertCircle,
   Sparkles,
   Database,
-  ArrowRight
+  ArrowRight,
+  Trash2,
+  RefreshCw,
+  FolderGit2,
+  Calendar,
+  BookOpen,
+  Edit3,
+  X,
+  Code2,
+  ShieldCheck,
+  Compass,
+  FileCode,
+  Zap,
+  Tag,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  ExternalLink
 } from 'lucide-react';
 
 const SUGGESTED_QUERIES = [
@@ -29,11 +47,79 @@ const SUGGESTED_QUERIES = [
   'Engineering evaluation rubric'
 ];
 
+const TEMPLATES = [
+  {
+    title: 'Senior Full Stack Rubric',
+    category: 'engineering',
+    text: `Evaluation Criteria for Senior Full Stack Engineer:
+1. Technical Competency:
+   - Deep knowledge of modern frontend frameworks (React, Next.js or Vue) and state management.
+   - Robust Node.js/TypeScript backend architecture with scalable REST/GraphQL APIs.
+   - Production experience with Docker, CI/CD pipelines, and cloud services (AWS/GCP).
+2. Code Quality & Systems Thinking:
+   - Writing clean, modular, self-documenting code with unit and integration tests.
+   - Experience designing scalable distributed architectures and microservices.
+3. Leadership & Autonomy:
+   - Ability to mentor junior engineers and conduct constructive code reviews.`
+  },
+  {
+    title: 'Product Design & UX Criteria',
+    category: 'product',
+    text: `Evaluation Criteria for Senior Product Designer:
+1. Systems & UX Research:
+   - Strong proficiency in Figma, design tokens, and scalable design system maintenance.
+   - Demonstrated experience running user research sessions, usability testing, and translating insights into prototypes.
+2. Cross-Functional Collaboration:
+   - Seamless collaboration with engineering and product managers to deliver accessible and WCAG-compliant UI.`
+  },
+  {
+    title: 'Compliance & Equal Opportunity Standard',
+    category: 'compliance',
+    text: `Internal Hiring Compliance & Diversity Standards:
+1. Fair & Bias-Free Screening:
+   - Strict blind screening guidelines omitting gender, age, ethnicity, and graduation year indicators.
+   - Standardized interview questions scored against empirical rubrics to ensure equal opportunity.
+2. Verification Protocol:
+   - Verify candidate contributions against authentic work portfolios or verified code contributions.`
+  }
+];
+
+const CATEGORY_CONFIG = {
+  engineering: {
+    label: 'Engineering',
+    icon: Code2,
+    badgeBg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
+    cardBorder: 'hover:border-blue-500/40',
+    iconColor: 'text-blue-600 bg-blue-500/10'
+  },
+  product: {
+    label: 'Product & UX',
+    icon: Compass,
+    badgeBg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400',
+    cardBorder: 'hover:border-purple-500/40',
+    iconColor: 'text-purple-600 bg-purple-500/10'
+  },
+  compliance: {
+    label: 'Compliance',
+    icon: ShieldCheck,
+    badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
+    cardBorder: 'hover:border-emerald-500/40',
+    iconColor: 'text-emerald-600 bg-emerald-500/10'
+  },
+  general: {
+    label: 'General',
+    icon: BookOpen,
+    badgeBg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400',
+    cardBorder: 'hover:border-amber-500/40',
+    iconColor: 'text-amber-600 bg-amber-500/10'
+  }
+};
+
 const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }) => {
-  const [activeSubTab, setActiveSubTab] = useState('search'); // 'search' | 'add'
+  const [activeSubTab, setActiveSubTab] = useState('manage'); // 'manage' | 'search' | 'add'
 
   // Search state
-  const [collection, setCollection] = useState('resumes');
+  const [collection, setCollection] = useState('policies');
   const [searchQuery, setSearchQuery] = useState('');
   const [minSimilarity, setMinSimilarity] = useState(0.45);
   const [topK, setTopK] = useState(5);
@@ -50,6 +136,141 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
+
+  // Manage policies state
+  const [policies, setPolicies] = useState([]);
+  const [isLoadingPolicies, setIsLoadingPolicies] = useState(false);
+  const [policiesError, setPoliciesError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [reindexingDocId, setReindexingDocId] = useState(null);
+  const [deletingDocId, setDeletingDocId] = useState(null);
+  const [policyFilterCategory, setPolicyFilterCategory] = useState('all');
+  const [policySearchTerm, setPolicySearchTerm] = useState('');
+  
+  // View Details Modal state
+  const [viewingPolicy, setViewingPolicy] = useState(null);
+
+  // Edit policy drawer/modal state
+  const [editingPolicy, setEditingPolicy] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCategory, setEditCategory] = useState('engineering');
+  const [editJobId, setEditJobId] = useState('');
+  const [editText, setEditText] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const openEditModal = (policy) => {
+    setEditingPolicy(policy);
+    setEditTitle(policy.title || '');
+    setEditCategory(policy.category || 'engineering');
+    setEditJobId(policy.jobId?._id || policy.jobId || '');
+    setEditText(policy.text || '');
+    setEditError('');
+  };
+
+  const closeEditModal = () => {
+    setEditingPolicy(null);
+    setEditTitle('');
+    setEditCategory('engineering');
+    setEditJobId('');
+    setEditText('');
+    setEditError('');
+  };
+
+  const handleUpdatePolicy = async (e) => {
+    e?.preventDefault();
+    if (!editTitle.trim() || !editText.trim()) {
+      setEditError('Title and policy content are required.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setEditError('');
+    try {
+      const res = await api.put(`/rag/policies/${encodeURIComponent(editingPolicy.documentId)}`, {
+        title: editTitle.trim(),
+        category: editCategory,
+        jobId: editJobId || null,
+        text: editText.trim()
+      });
+
+      if (res.data?.success) {
+        setActionSuccess(`Policy "${editTitle}" updated and automatically re-indexed in Qdrant.`);
+        await fetchPolicies();
+        closeEditModal();
+        setTimeout(() => setActionSuccess(''), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to update policy:', err);
+      setEditError(err.response?.data?.error || 'Failed to update policy.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const fetchPolicies = async () => {
+    setIsLoadingPolicies(true);
+    setPoliciesError('');
+    try {
+      const res = await api.get('/rag/policies');
+      if (res.data?.success) {
+        setPolicies(res.data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch policies:', err);
+      setPoliciesError(err.response?.data?.error || 'Failed to load policies.');
+    } finally {
+      setIsLoadingPolicies(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPolicies();
+  }, []);
+
+  const handleDeletePolicy = async (documentId, title) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"? This removes the vector embeddings from Qdrant and knowledge base records.`)) {
+      return;
+    }
+    setDeletingDocId(documentId);
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const res = await api.delete(`/rag/policies/${encodeURIComponent(documentId)}`);
+      if (res.data?.success) {
+        setActionSuccess(`Policy "${title}" deleted from vector index and database.`);
+        setPolicies((prev) => prev.filter((p) => p.documentId !== documentId));
+        setTimeout(() => setActionSuccess(''), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to delete policy:', err);
+      setActionError(err.response?.data?.error || 'Failed to delete policy.');
+      setTimeout(() => setActionError(''), 5000);
+    } finally {
+      setDeletingDocId(null);
+    }
+  };
+
+  const handleReindexPolicy = async (documentId, title) => {
+    setReindexingDocId(documentId);
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const res = await api.post(`/rag/policies/${encodeURIComponent(documentId)}/reindex`);
+      if (res.data?.success) {
+        setActionSuccess(`"${title}" re-indexed successfully with ${res.data.chunks} vector chunks.`);
+        await fetchPolicies();
+        setTimeout(() => setActionSuccess(''), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to re-index policy:', err);
+      setActionError(err.response?.data?.error || 'Failed to re-index policy.');
+      setTimeout(() => setActionError(''), 5000);
+    } finally {
+      setReindexingDocId(null);
+    }
+  };
 
   const handleJobChange = (jobId) => {
     setActiveJobId(jobId);
@@ -112,6 +333,10 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
       setPolicyTitle('');
       setPolicyText('');
       setPolicyJobId('');
+      fetchPolicies();
+      setTimeout(() => {
+        setActiveSubTab('manage');
+      }, 1200);
     } catch (err) {
       console.error('Policy Indexing Error:', err);
       setSubmitError(err.response?.data?.error || 'Failed to index policy');
@@ -138,8 +363,20 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
           <div className="flex items-center p-1 bg-secondary/80 rounded-xl border border-border shadow-2xs">
             <button
               type="button"
+              onClick={() => setActiveSubTab('manage')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                activeSubTab === 'manage'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              Policies ({policies.length})
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveSubTab('search')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 activeSubTab === 'search'
                   ? 'bg-card text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
@@ -151,7 +388,7 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
             <button
               type="button"
               onClick={() => setActiveSubTab('add')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 activeSubTab === 'add'
                   ? 'bg-card text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
@@ -164,7 +401,280 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
         }
       />
 
-      {activeSubTab === 'search' ? (
+      {/* Dashboard Metrics Header */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total Policies</p>
+            <p className="text-xl font-bold text-foreground tracking-tight">{policies.length}</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+            <Database className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Dense Vectors</p>
+            <p className="text-xl font-bold text-foreground tracking-tight">{policies.reduce((acc, p) => acc + (p.indexedChunks || 1), 0)}</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+            <FolderGit2 className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Role Targeted</p>
+            <p className="text-xl font-bold text-foreground tracking-tight">{policies.filter(p => !!p.jobId).length}</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-3.5 flex items-center gap-3 shadow-2xs">
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Global Standards</p>
+            <p className="text-xl font-bold text-foreground tracking-tight">{policies.filter(p => !p.jobId).length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Flash Notifications */}
+      {actionSuccess && (
+        <div className="text-xs text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between font-medium shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{actionSuccess}</span>
+          </div>
+          <button onClick={() => setActionSuccess('')} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+        </div>
+      )}
+
+      {actionError && (
+        <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl p-3 flex items-center justify-between font-medium shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{actionError}</span>
+          </div>
+          <button onClick={() => setActionError('')} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+        </div>
+      )}
+
+      {activeSubTab === 'manage' ? (
+        /* Manage Policies Tab */
+        <div className="space-y-4">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+              {/* Policy Search Input */}
+              <div className="relative min-w-[200px] max-w-xs">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Filter guidelines by name or ID..."
+                  value={policySearchTerm}
+                  onChange={(e) => setPolicySearchTerm(e.target.value)}
+                  className="w-full bg-background border border-input rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                {policySearchTerm && (
+                  <button
+                    onClick={() => setPolicySearchTerm('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                {['all', 'engineering', 'product', 'compliance', 'general'].map((cat) => {
+                  const cfg = CATEGORY_CONFIG[cat];
+                  const Icon = cfg?.icon;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setPolicyFilterCategory(cat)}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-lg capitalize transition-all flex items-center gap-1.5 shrink-0 ${
+                        policyFilterCategory === cat
+                          ? 'bg-primary text-primary-foreground shadow-xs'
+                          : 'bg-secondary/70 text-muted-foreground hover:text-foreground hover:bg-secondary'
+                      }`}
+                    >
+                      {Icon && <Icon className="w-3 h-3" />}
+                      {cfg?.label || cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchPolicies}
+                disabled={isLoadingPolicies}
+                className="text-xs gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingPolicies ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setActiveSubTab('add')}
+                className="text-xs gap-1.5 shadow-xs"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                New Policy
+              </Button>
+            </div>
+          </div>
+
+          {isLoadingPolicies ? (
+            <div className="py-16 text-center text-xs text-muted-foreground bg-card border border-border rounded-xl flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+              Loading indexed hiring policies from Qdrant...
+            </div>
+          ) : policiesError ? (
+            <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {policiesError}
+            </div>
+          ) : policies.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No hiring policies indexed yet"
+              description="Upload internal evaluation rubrics, standards, or role criteria into Qdrant to power semantic RAG matching."
+              actionLabel="Add First Policy"
+              onAction={() => setActiveSubTab('add')}
+              className="py-16"
+            />
+          ) : (
+            /* Vertical Responsive Policy Cards Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {policies
+                .filter((p) => {
+                  const matchesCat = policyFilterCategory === 'all' || p.category === policyFilterCategory;
+                  const matchesQuery = !policySearchTerm || 
+                    p.title?.toLowerCase().includes(policySearchTerm.toLowerCase()) ||
+                    p.documentId?.toLowerCase().includes(policySearchTerm.toLowerCase()) ||
+                    p.text?.toLowerCase().includes(policySearchTerm.toLowerCase());
+                  return matchesCat && matchesQuery;
+                })
+                .map((policy) => {
+                  const isDeleting = deletingDocId === policy.documentId;
+                  const isReindexing = reindexingDocId === policy.documentId;
+                  const catCfg = CATEGORY_CONFIG[policy.category] || CATEGORY_CONFIG.general;
+                  const CatIcon = catCfg.icon || BookOpen;
+
+                  return (
+                    <div
+                      key={policy.documentId}
+                      className={`bg-card border border-border rounded-xl p-4 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between space-y-4 ${catCfg.cardBorder}`}
+                    >
+                      {/* Top Header */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`p-1.5 rounded-lg shrink-0 ${catCfg.iconColor}`}>
+                              <CatIcon className="w-4 h-4" />
+                            </div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border uppercase tracking-wider ${catCfg.badgeBg}`}>
+                              {catCfg.label}
+                            </span>
+                          </div>
+                          
+                          {policy.jobId ? (
+                            <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md flex items-center gap-1 max-w-[140px] truncate" title={typeof policy.jobId === 'object' ? policy.jobId.title : 'Target Opening'}>
+                              <FolderGit2 className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{typeof policy.jobId === 'object' ? policy.jobId.title : 'Target Opening'}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground bg-secondary/80 border border-border/50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />
+                              Global Standard
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title & Document Id */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground tracking-tight line-clamp-2 leading-snug" title={policy.title}>
+                            {policy.title}
+                          </h4>
+                          <p className="text-[10px] font-mono text-muted-foreground/80 mt-1 truncate">
+                            {policy.documentId}
+                          </p>
+                        </div>
+
+                        {/* Important Metrics Row */}
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/50">
+                          <span className="flex items-center gap-1 text-primary font-medium">
+                            <Database className="w-3 h-3" />
+                            {policy.indexedChunks || 1} Chunks
+                          </span>
+                          <span className="flex items-center gap-1 text-[10px]">
+                            <Calendar className="w-3 h-3" />
+                            {policy.lastIndexedAt ? new Date(policy.lastIndexedAt).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bottom Actions: View Detail Modal trigger + actions */}
+                      <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setViewingPolicy(policy)}
+                          className="h-7 text-xs gap-1.5 flex-1 hover:text-primary hover:border-primary/40 font-medium"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-primary" />
+                          View Details
+                        </Button>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={isReindexing || isDeleting}
+                            onClick={() => openEditModal(policy)}
+                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Edit Policy"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isReindexing || isDeleting}
+                            onClick={() => handleReindexPolicy(policy.documentId, policy.title)}
+                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Re-index into Qdrant"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-primary' : ''}`} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isReindexing || isDeleting}
+                            onClick={() => handleDeletePolicy(policy.documentId, policy.title)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            title="Delete Policy"
+                          >
+                            <Trash2 className={`w-3.5 h-3.5 ${isDeleting ? 'animate-pulse text-destructive' : ''}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      ) : activeSubTab === 'search' ? (
         /* Modern 2-Column Split Layout */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
@@ -398,26 +908,69 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
           </main>
         </div>
       ) : (
-        /* Add Policy Layout */
+        /* Add Policy Layout with Template Quick-Fill */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <aside className="lg:col-span-4 bg-card border border-border rounded-xl p-5 shadow-xs space-y-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2 text-foreground font-semibold text-sm pb-2 border-b border-border/60">
-              <UploadCloud className="w-4 h-4 text-primary" />
-              Guidelines
+          <aside className="lg:col-span-4 space-y-4">
+            <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-3.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-foreground font-semibold text-sm pb-2 border-b border-border/60">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                  <UploadCloud className="w-4 h-4" />
+                </div>
+                Vector Ingestion Info
+              </div>
+              <p className="leading-relaxed">
+                When you index a policy, the text is split into semantic paragraphs, embedded via <code className="text-foreground font-mono">bge-small-en</code> (384-d vectors), and saved in Qdrant.
+              </p>
+              <p className="leading-relaxed">
+                The <span className="font-semibold text-foreground">AI Matching Agent</span> references these policies during automated applicant screening to verify compliance and minimum qualifications.
+              </p>
             </div>
-            <p className="leading-relaxed">
-              When you add a policy, the text is split into semantic chunks and embedded as 384-dimensional dense vectors in Qdrant.
-            </p>
-            <p className="leading-relaxed">
-              The AI Matching Agent references these policies during automated applicant screening to verify compliance and minimum qualifications.
-            </p>
+
+            {/* Quick Templates Selector */}
+            <div className="bg-card border border-border rounded-xl p-4 shadow-xs space-y-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Quick Rubric Templates
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Click a template below to auto-fill standardized evaluation standards:
+              </p>
+              <div className="space-y-2">
+                {TEMPLATES.map((tmpl, tIdx) => {
+                  const cfg = CATEGORY_CONFIG[tmpl.category] || CATEGORY_CONFIG.general;
+                  const TmplIcon = cfg.icon;
+                  return (
+                    <button
+                      key={tIdx}
+                      type="button"
+                      onClick={() => {
+                        setPolicyTitle(tmpl.title);
+                        setPolicyCategory(tmpl.category);
+                        setPolicyText(tmpl.text);
+                      }}
+                      className="w-full text-left p-2.5 rounded-lg border border-border/70 hover:border-primary/40 bg-secondary/30 hover:bg-secondary/60 transition-all flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`p-1 rounded-md ${cfg.iconColor} shrink-0`}>
+                          <TmplIcon className="w-3 h-3" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                          {tmpl.title}
+                        </span>
+                      </div>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </aside>
 
           <main className="lg:col-span-8 bg-card border border-border rounded-xl p-6 shadow-xs space-y-4">
             <div>
-              <h3 className="text-base font-semibold text-foreground">Add Hiring Policy</h3>
+              <h3 className="text-base font-semibold text-foreground">Index New Hiring Policy</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Define organizational criteria, interview rubrics, or role prerequisites.
+                Define organizational criteria, interview rubrics, or role prerequisites to guide agent decisions.
               </p>
             </div>
 
@@ -429,7 +982,7 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Frontend Engineering Evaluation Rubric 2026"
+                  placeholder="e.g. Senior Frontend Architecture Rubric 2026"
                   value={policyTitle}
                   onChange={(e) => setPolicyTitle(e.target.value)}
                   className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -472,11 +1025,11 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 </label>
                 <textarea
                   required
-                  rows={7}
+                  rows={8}
                   placeholder="Paste internal evaluation criteria, required competencies, or interview rubrics..."
                   value={policyText}
                   onChange={(e) => setPolicyText(e.target.value)}
-                  className="w-full bg-background border border-input rounded-lg p-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed resize-none"
+                  className="w-full bg-background border border-input rounded-lg p-3 text-sm text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed resize-none"
                 />
               </div>
 
@@ -494,7 +1047,7 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex justify-end gap-2 pt-1 border-t border-border/60">
                 <Button
                   type="button"
                   variant="outline"
@@ -508,12 +1061,230 @@ const KnowledgeBaseTab = ({ jobs = [], selectedJobId = 'all', setSelectedJobId }
                 >
                   Reset
                 </Button>
-                <Button type="submit" size="sm" loading={isSubmitting} disabled={!policyTitle.trim() || !policyText.trim()}>
+                <Button type="submit" size="sm" loading={isSubmitting} disabled={!policyTitle.trim() || !policyText.trim()} className="gap-1.5">
+                  <UploadCloud className="w-4 h-4" />
                   Save & Index
                 </Button>
               </div>
             </form>
           </main>
+        </div>
+      )}
+
+      {/* Edit Policy Modal / Drawer */}
+      {editingPolicy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Edit Hiring Policy</h3>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    ID: {editingPolicy.documentId}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeEditModal}
+                disabled={isUpdating}
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdatePolicy} className="space-y-4 flex-1 overflow-y-auto pr-1">
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1.5">
+                  Policy Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-foreground block mb-1.5">Associate with Opening</label>
+                  <Select
+                    value={editJobId}
+                    onChange={(e) => setEditJobId(e.target.value)}
+                  >
+                    <option value="">All Openings (Global Standard)</option>
+                    {jobs.map((job) => (
+                      <option key={job._id} value={job._id}>
+                        {job.title}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-foreground block mb-1.5">Category</label>
+                  <Select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                  >
+                    <option value="engineering">Engineering</option>
+                    <option value="product">Product & Design</option>
+                    <option value="compliance">Compliance & Legal</option>
+                    <option value="general">General Hiring</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-foreground">
+                    Policy Content / Rubric Text *
+                  </label>
+                  <span className="text-[11px] text-muted-foreground">
+                    Saving automatically recalculates semantic chunks & vectors in Qdrant
+                  </span>
+                </div>
+                <textarea
+                  required
+                  rows={8}
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="w-full bg-background border border-input rounded-lg p-3 text-sm text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed resize-none"
+                />
+              </div>
+
+              {editError && (
+                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-2.5 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {editError}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isUpdating}
+                  onClick={closeEditModal}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  loading={isUpdating}
+                  disabled={!editTitle.trim() || !editText.trim()}
+                  className="gap-1.5"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
+                  Save & Re-index
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Details Policy Modal */}
+      {viewingPolicy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-lg ${(CATEGORY_CONFIG[viewingPolicy.category] || CATEGORY_CONFIG.general).iconColor}`}>
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground tracking-tight">
+                    {viewingPolicy.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                    <span className="font-mono text-[10px] bg-secondary/80 px-1.5 py-0.5 rounded border border-border/50">
+                      ID: {viewingPolicy.documentId}
+                    </span>
+                    <span>•</span>
+                    <span className="capitalize font-medium text-foreground">
+                      {(CATEGORY_CONFIG[viewingPolicy.category] || CATEGORY_CONFIG.general).label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingPolicy(null)}
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Meta badges strip */}
+            <div className="flex items-center gap-3 text-xs bg-secondary/30 p-2.5 rounded-xl border border-border/60">
+              <div className="flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Indexed Chunks:</span>
+                <span className="font-semibold text-foreground">{viewingPolicy.indexedChunks || 1}</span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-1.5">
+                <FolderGit2 className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-muted-foreground">Scope:</span>
+                <span className="font-semibold text-foreground">
+                  {viewingPolicy.jobId ? (typeof viewingPolicy.jobId === 'object' ? viewingPolicy.jobId.title : 'Target Opening') : 'Global Standard'}
+                </span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">Updated:</span>
+                <span className="font-medium text-foreground">
+                  {viewingPolicy.lastIndexedAt ? new Date(viewingPolicy.lastIndexedAt).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
+            </div>
+
+            {/* Policy Full Content Scroll area */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                Full Policy & Evaluation Rubric Content
+              </label>
+              <div className="bg-secondary/40 border border-border/70 rounded-xl p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap text-foreground select-text">
+                {viewingPolicy.text}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const toEdit = viewingPolicy;
+                    setViewingPolicy(null);
+                    openEditModal(toEdit);
+                  }}
+                  className="gap-1.5 text-xs h-8"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-primary" />
+                  Edit Policy
+                </Button>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setViewingPolicy(null)}
+                className="text-xs h-8"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
