@@ -15,6 +15,7 @@ const ShortlistingAgent = require('../agents/shortlistingAgent');
 const InterviewAgent = require('../agents/interviewAgent');
 const EmailAgent = require('../agents/emailAgent');
 const githubMcpConnector = require('../mcp/githubMcp/githubMcpConnector');
+const leetcodeMcpConnector = require('../mcp/leetcodeMcp/leetcodeMcpConnector');
 
 // Global workflow automation settings state (can be changed dynamically from dashboard toggle)
 let globalWorkflowConfig = {
@@ -240,14 +241,35 @@ class HiringWorkflowEngine {
             }
           }
 
+          // MCP LEETCODE DSA SCORING (Algorithmic & Problem Solving Verification)
+          const leetcodeHandle = candidate.leetcode_url || candidate.leetcode_username;
+          if (leetcodeHandle) {
+            try {
+              console.log(`⚡ [Workflow ${workflow._id}] Triggering LeetCode MCP Tool for candidate '${candidate.name}' (Target: ${leetcodeHandle})...`);
+              const leetcodeAnalysis = await leetcodeMcpConnector.evaluateCandidate(leetcodeHandle, job);
+
+              if (leetcodeAnalysis && leetcodeAnalysis.dsa_score !== null) {
+                candidate.dsa_score = leetcodeAnalysis.dsa_score;
+                candidate.leetcode_username = leetcodeAnalysis.username || candidate.leetcode_username || leetcodeHandle;
+                candidate.leetcode_metrics = leetcodeAnalysis.metrics;
+                console.log(`⚡ [Workflow ${workflow._id}] LeetCode MCP Evaluation Complete: DSA Score = ${candidate.dsa_score}%`);
+              }
+            } catch (lcErr) {
+              console.warn(`⚠️ [Workflow ${workflow._id}] LeetCode MCP Evaluation non-fatal error:`, lcErr.message);
+            }
+          }
+
           await candidate.save();
 
           console.log('\n======================================================');
-          console.log('🎯 [Agent 3: Matching Agent & MCP GitHub] COMPLETED WORK');
+          console.log('🎯 [Agent 3: Matching Agent, GitHub MCP & LeetCode MCP] COMPLETED WORK');
           console.log('------------------------------------------------------');
           console.log(`🎯 Match Score    : ${result.data.match_score}% (RAG Resume Alignment)`);
           if (candidate.coding_score !== null && candidate.coding_score !== undefined) {
             console.log(`💻 Coding Score   : ${candidate.coding_score}% (Empirical GitHub Verification)`);
+          }
+          if (candidate.dsa_score !== null && candidate.dsa_score !== undefined) {
+            console.log(`⚡ DSA Score      : ${candidate.dsa_score}% (LeetCode MCP Verification)`);
           }
           console.log(`✅ Matched Skills : ${JSON.stringify(result.data.matched_required_skills || [])}`);
           console.log(`❌ Missing Skills : ${JSON.stringify(result.data.missing_skills || [])}`);

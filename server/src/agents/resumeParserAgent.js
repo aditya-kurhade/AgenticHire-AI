@@ -62,6 +62,16 @@ Extract candidate details from the provided resume text. Respond ONLY with a val
       const cleanJson = llmResponse.slice(jsonStart, jsonEnd);
 
       const parsedData = JSON.parse(cleanJson);
+
+      // Opportunistically detect LeetCode link from rawText if not present in parsed data
+      if (!parsedData.leetcode_url) {
+        const leetcodeMatch = rawText.match(/leetcode\.(?:com|cn)\/(?:u\/)?([a-zA-Z0-9_\-]+)/i);
+        if (leetcodeMatch) {
+          parsedData.leetcode_url = `https://leetcode.com/u/${leetcodeMatch[1]}`;
+          parsedData.leetcode_username = leetcodeMatch[1];
+        }
+      }
+
       console.log(`✅ [ResumeParserAgent] Successfully structured candidate: ${parsedData.name} with ${parsedData.skills?.length || 0} skills.`);
 
       return {

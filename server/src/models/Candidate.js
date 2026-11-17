@@ -51,6 +51,25 @@ const CandidateSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: null
   },
+  // Algorithmic & Problem Solving Evaluation (MCP LeetCode)
+  leetcode_url: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  dsa_score: {
+    type: Number,
+    default: null
+  },
+  leetcode_username: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  leetcode_metrics: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
   status: {
     type: String,
     default: 'pending'

@@ -10,6 +10,7 @@ const candidateSchema = z.object({
   email: z.string().email('Invalid email address').trim().toLowerCase(),
   phone: z.string().optional().default(''),
   github_url: z.string().optional().default(''),
+  leetcode_url: z.string().optional().default(''),
   jobId: z.string().min(1, 'Job ID is required')
 });
 
@@ -33,7 +34,7 @@ const uploadCandidate = async (req, res) => {
       return res.status(400).json({ success: false, error: errorMsg });
     }
 
-    const { name, email, phone, github_url, jobId } = validationResult.data;
+    const { name, email, phone, github_url, leetcode_url, jobId } = validationResult.data;
 
     // Verify Job exists and is active for applications
     const job = await Job.findById(jobId);
@@ -57,6 +58,9 @@ const uploadCandidate = async (req, res) => {
     // Clean github handle from provided url if present
     const cleanHandle = github_url ? (github_url.match(/github\.com\/([a-zA-Z0-9_\-]+)/i)?.[1] || github_url.replace(/^@/, '').trim()) : null;
 
+    // Clean leetcode handle from provided url if present
+    const cleanLeetcodeHandle = leetcode_url ? (leetcode_url.match(/leetcode\.(?:com|cn)\/(?:u\/)?([a-zA-Z0-9_\-]+)/i)?.[1] || leetcode_url.replace(/^@/, '').trim()) : null;
+
     // Create Candidate entry
     const candidate = await Candidate.create({
       name,
@@ -64,6 +68,8 @@ const uploadCandidate = async (req, res) => {
       phone: phone || '',
       github_url: github_url || '',
       github_username: cleanHandle,
+      leetcode_url: leetcode_url || '',
+      leetcode_username: cleanLeetcodeHandle,
       resume_url: `/uploads/${req.file.filename}`,
       job_id: job._id,
       status: 'pending'

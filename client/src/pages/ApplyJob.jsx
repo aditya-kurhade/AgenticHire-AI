@@ -13,6 +13,7 @@ const ApplyJob = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
+  const [leetcodeUrl, setLeetcodeUrl] = useState('');
   const [resume, setResume] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -61,6 +62,7 @@ const ApplyJob = () => {
     formData.append('email', email);
     formData.append('phone', phone);
     formData.append('github_url', githubUrl);
+    formData.append('leetcode_url', leetcodeUrl);
     formData.append('jobId', jobId);
     formData.append('resume', resume);
 
@@ -223,7 +225,7 @@ const ApplyJob = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-foreground" htmlFor="githubUrl">GitHub Profile URL (For MCP Practical Coding Score)</label>
+              <label className="block text-xs font-medium text-foreground" htmlFor="githubUrl">GitHub Profile URL (For Practical MCP Code Score)</label>
               <input 
                 className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all font-mono text-xs" 
                 id="githubUrl" 
@@ -233,6 +235,19 @@ const ApplyJob = () => {
                 onChange={(e) => setGithubUrl(e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">Optional: Used by our GitHub MCP Agent to verify your public repositories & empirical code contributions.</p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-foreground" htmlFor="leetcodeUrl">LeetCode Profile URL (For Algorithmic DSA Evaluation)</label>
+              <input 
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-1 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground/60 transition-all font-mono text-xs" 
+                id="leetcodeUrl" 
+                placeholder="https://leetcode.com/u/your-username" 
+                type="url"
+                value={leetcodeUrl}
+                onChange={(e) => setLeetcodeUrl(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">Optional: Used by our LeetCode MCP Protocol to verify problem-solving depth, acceptance rate, and DSA skills.</p>
             </div>
 
             <div className="space-y-1">

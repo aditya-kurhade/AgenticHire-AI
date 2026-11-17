@@ -7,6 +7,8 @@ import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { GitHubScoreTooltip } from './GitHubScoreTooltip';
+import { LeetCodeScoreTooltip } from './LeetCodeScoreTooltip';
+import { LeetCodeIcon } from '../ui/LeetCodeIcon';
 import { InterviewModal } from './InterviewModal';
 import {
   Search,
@@ -234,6 +236,7 @@ const CandidatesTab = ({
                 <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contact</th>
                 <th className="px-5 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Match</th>
                 <th className="px-5 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Code Score (MCP)</th>
+                <th className="px-5 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">LeetCode DSA</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                 <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
               </tr>
@@ -241,7 +244,7 @@ const CandidatesTab = ({
             <tbody className="divide-y divide-border/60">
               {filteredCandidates.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8">
+                  <td colSpan="8" className="px-6 py-8">
                     <EmptyState
                       icon={Users}
                       title={candidates.length === 0 ? 'No candidates yet' : 'No matches for filters'}
@@ -319,6 +322,32 @@ const CandidatesTab = ({
                                 codingScore={c.coding_score}
                                 username={c.github_username}
                                 metrics={c.github_metrics}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-center relative group">
+                      <div className="inline-flex flex-col items-center cursor-help">
+                        {c.dsa_score != null ? (
+                          <>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold text-xs tabular-nums shadow-2xs group-hover:bg-amber-500/20 group-hover:border-amber-500/40 transition-all">
+                              <LeetCodeIcon className="w-3.5 h-3.5 shrink-0" />
+                              <span>{`${c.dsa_score}%`}</span>
+                            </div>
+                            <div className="w-16 h-1.5 bg-secondary border border-border rounded-full overflow-hidden mt-1.5">
+                              <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${c.dsa_score || 0}%` }} />
+                            </div>
+
+                            {/* Hover Tooltip Breakdown */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[100] pointer-events-none transition-opacity duration-150 animate-in fade-in zoom-in-95">
+                              <LeetCodeScoreTooltip
+                                dsaScore={c.dsa_score}
+                                username={c.leetcode_username}
+                                metrics={c.leetcode_metrics}
                               />
                             </div>
                           </>
@@ -425,8 +454,13 @@ const CandidatesTab = ({
                     Match: {c.match_score != null ? `${c.match_score}%` : '—'}
                   </span>
                   {c.coding_score != null && (
-                    <span className="text-[11px] font-semibold text-foreground tabular-nums">
+                    <span className="text-[11px] font-semibold text-foreground tabular-nums flex items-center gap-1">
                       Code: {c.coding_score}%
+                    </span>
+                  )}
+                  {c.dsa_score != null && (
+                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1">
+                      DSA: {c.dsa_score}%
                     </span>
                   )}
                 </div>
