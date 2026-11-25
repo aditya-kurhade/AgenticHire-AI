@@ -8,6 +8,7 @@ import CandidatesTab from '../components/dashboard/CandidatesTab';
 import WorkflowsTab from '../components/dashboard/WorkflowsTab';
 import AnalyticsTab from '../components/dashboard/AnalyticsTab';
 import KnowledgeBaseTab from '../components/dashboard/KnowledgeBaseTab';
+import CandidateCopilotTab from '../components/dashboard/CandidateCopilotTab';
 import { useRealtimeWorkflow } from '../hooks/useRealtimeWorkflow';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -44,7 +45,8 @@ import {
   Info,
   ArrowRight,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  UserCheck
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -52,6 +54,7 @@ const NAV_ITEMS = [
   { id: 'jobs', label: 'Job Specs', icon: FileText },
   { id: 'candidates', label: 'Candidates', icon: Users },
   { id: 'workflows', label: 'AI Workflows', icon: GitFork },
+  { id: 'copilot', label: 'Interview Copilot', icon: UserCheck },
   { id: 'knowledge', label: 'Knowledge Base', icon: BrainCircuit },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
@@ -63,6 +66,7 @@ const Dashboard = () => {
   const getTabFromPath = (pathname) => {
     if (pathname.includes('/dashboard/candidates')) return 'candidates';
     if (pathname.includes('/dashboard/workflows')) return 'workflows';
+    if (pathname.includes('/dashboard/copilot')) return 'copilot';
     if (pathname.includes('/dashboard/knowledge')) return 'knowledge';
     if (pathname.includes('/dashboard/analytics')) return 'analytics';
     if (pathname.includes('/dashboard/jobs/create')) return 'jobs';
@@ -160,6 +164,7 @@ const Dashboard = () => {
       jobs: '/dashboard/jobs',
       candidates: '/dashboard/candidates',
       workflows: '/dashboard/workflows',
+      copilot: '/dashboard/copilot',
       knowledge: '/dashboard/knowledge',
       analytics: '/dashboard/analytics'
     };
@@ -902,6 +907,15 @@ const Dashboard = () => {
               {activeTab === 'analytics' && (
                 <AnalyticsTab
                   analyticsData={analyticsData}
+                  jobs={jobs}
+                  candidates={candidates}
+                  selectedJobId={selectedJobId}
+                  setSelectedJobId={setSelectedJobId}
+                />
+              )}
+
+              {activeTab === 'copilot' && (
+                <CandidateCopilotTab
                   jobs={jobs}
                   candidates={candidates}
                   selectedJobId={selectedJobId}

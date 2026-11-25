@@ -85,6 +85,40 @@ class GitHubMCPConnector {
   }
 
   /**
+   * Builds GitHub REST API headers with optional auth token
+   */
+  static getRestHeaders() {
+    const headers = {
+      "User-Agent": "AgenticHire-AI-MCP-Scorer"
+    };
+    const token = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
+    if (token) {
+      headers["Authorization"] = `token ${token}`;
+    }
+    return headers;
+  }
+
+  /**
+   * Fetches user profile metadata (for exact public_repos count)
+   * @param {string} username - GitHub username
+   */
+  async fetchUserProfile(username) {
+    const cleanUser = GitHubMCPConnector.cleanUsername(username);
+    if (!cleanUser) return null;
+
+    try {
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanUser)}`, {
+        headers: GitHubMCPConnector.getRestHeaders()
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      console.warn(`[MCP GitHub] Fetch profile for "${cleanUser}" failed:`, err.message);
+      return null;
+    }
+  }
+
+  /**
    * Fetches candidate repositories via MCP tool or REST API
    * @param {string} username - GitHub username
    */
@@ -109,16 +143,8 @@ class GitHubMCPConnector {
 
     // Direct REST API (with or without GITHUB_TOKEN)
     try {
-      const headers = {
-        "User-Agent": "AgenticHire-AI-MCP-Scorer"
-      };
-      const token = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
-      if (token) {
-        headers["Authorization"] = `token ${token}`;
-      }
-
-      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanUser)}/repos?per_page=50&sort=pushed`, {
-        headers
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanUser)}/repos?per_page=100&sort=pushed`, {
+        headers: GitHubMCPConnector.getRestHeaders()
       });
 
       if (!res.ok) {
@@ -154,14 +180,19 @@ class GitHubMCPConnector {
 
     console.log(`🐙 [MCP GitHub] Analyzing developer profile: '${username}' against required skills [${requiredSkills.join(', ')}]...`);
 
-    const repos = await this.fetchRepositories(username);
+    const [repos, profile] = await Promise.all([
+      this.fetchRepositories(username),
+      this.fetchUserProfile(username)
+    ]);
+    const exactPublicRepos = typeof profile?.public_repos === 'number' ? profile.public_repos : null;
 
     if (!Array.isArray(repos) || repos.length === 0) {
       return {
         has_github: true,
         username,
         coding_score: 15, // minimum baseline for having an empty/unreachable profile
-        total_repos: 0,
+        public_repos: exactPublicRepos ?? 0,
+        total_repos: exactPublicRepos ?? 0,
         total_stars: 0,
         matched_skills: [],
         top_languages: [],
@@ -178,6 +209,7 @@ class GitHubMCPConnector {
 
     // Compute multi-factor coding score
     const scoreResult = GitHubScorer.calculateScore(repos, requiredSkills, preferredSkills);
+    const repoCount = exactPublicRepos ?? scoreResult.total_repos;
 
     console.log(`💻 [MCP GitHub] Practical Coding Score computed for @${username}: ${scoreResult.coding_score}%`);
 
@@ -188,7 +220,8 @@ class GitHubMCPConnector {
       breakdown: scoreResult.breakdown,
       matched_skills: scoreResult.matched_languages,
       top_languages: scoreResult.top_languages,
-      total_repos: scoreResult.total_repos,
+      public_repos: repoCount,
+      total_repos: repoCount,
       original_repos: scoreResult.original_repos,
       total_stars: scoreResult.total_stars,
       total_forks: scoreResult.total_forks,

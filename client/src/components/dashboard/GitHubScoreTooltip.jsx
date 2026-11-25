@@ -65,7 +65,7 @@ export const GitHubScoreTooltip = ({ metrics, codingScore, username }) => {
         <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-2 text-[10px]">
           <div className="bg-secondary/50 p-1.5 rounded-md">
             <span className="text-muted-foreground block">Public Repos</span>
-            <span className="font-semibold text-foreground text-xs">{metrics.total_repos ?? metrics.original_repos ?? 0}</span>
+            <span className="font-semibold text-foreground text-xs">{metrics.public_repos ?? metrics.total_repos ?? metrics.original_repos ?? 0}</span>
           </div>
           <div className="bg-secondary/50 p-1.5 rounded-md">
             <span className="text-muted-foreground block">Total Stars</span>
